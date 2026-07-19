@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MultiHolidays - Dashboard</title>
+<!-- Google Fonts: Hanken Grotesk & Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "#434655",
+                    "inverse-surface": "#2d3133",
+                    "on-error": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "secondary-container": "#dae2fd",
+                    "tertiary-container": "#007d55",
+                    "surface-container-low": "#f2f4f6",
+                    "on-surface": "#191c1e",
+                    "on-primary": "#ffffff",
+                    "surface-tint": "#0053db",
+                    "outline-variant": "#c3c6d7",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#2563eb",
+                    "surface": "#f7f9fb",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#00174b",
+                    "secondary-fixed": "#dae2fd",
+                    "primary-fixed": "#dbe1ff",
+                    "on-background": "#191c1e",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#e0e3e5",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed": "#002113",
+                    "on-tertiary-container": "#bdffdb",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#006242",
+                    "inverse-primary": "#b4c5ff",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "outline": "#737686",
+                    "surface-dim": "#d8dadc",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary": "#004ac6",
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "secondary": "#565e74",
+                    "on-secondary-container": "#5c647a",
+                    "surface-container-high": "#e6e8ea",
+                    "surface-variant": "#e0e3e5",
+                    "surface-container": "#eceef0",
+                    "surface-bright": "#f7f9fb",
+                    "on-primary-container": "#eeefff",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-secondary-fixed": "#131b2e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "lg": "32px",
+                    "xs": "8px",
+                    "md": "24px",
+                    "xl": "48px",
+                    "container-max": "1280px",
+                    "margin-mobile": "16px",
+                    "sm": "16px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "label-sm": ["Inter"],
+                    "headline-xl": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f7f9fb;
+        }
+        .bento-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .bento-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- SideNavBar Anchor -->
+<aside class="w-[280px] h-screen fixed left-0 top-0 bg-surface border-r border-outline-variant flex flex-col h-full py-md px-sm z-50">
+<div class="mb-xl px-sm">
+<h1 class="text-headline-md font-headline-md font-bold text-primary">MultiHolidays</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Attendance Planning</p>
+</div>
+<nav class="flex-grow space-y-base">
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-primary font-bold border-r-4 border-primary bg-secondary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-md text-label-md">Leave Calendar</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</a>
+</nav>
+<div class="mt-auto space-y-base border-t border-outline-variant pt-md">
+<button class="w-full mb-md bg-primary text-on-primary py-sm rounded-lg font-label-md hover:opacity-90 active:scale-95 transition-all">
+                Apply for Leave
+            </button>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-md text-label-md">Help</span>
+</a>
+</div>
+</aside>
+<!-- TopAppBar Anchor -->
+<header class="fixed top-0 right-0 left-[280px] h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-40">
+<h2 class="text-headline-md font-headline-md text-on-surface">Your Dashboard</h2>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs text-on-surface-variant hover:bg-surface-container-low rounded-full p-2 cursor-pointer transition-opacity active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+<div class="flex items-center gap-sm bg-surface-container rounded-full pl-base pr-md py-base border border-outline-variant hover:bg-surface-container-high cursor-pointer transition-colors">
+<img class="w-8 h-8 rounded-full object-cover shadow-sm" data-alt="A professional headshot of a young female student with a friendly expression, set against a soft academic campus background. The lighting is bright and natural, reflecting a modern corporate clean aesthetic with soft shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbxpfzYth4wBFaB9fb6Z16bOBf7uU7AClergHGW9X1IfwWIyNv7EMgUvg5Grgqkfh8zwdt5C_D5_l5p4UkiF3iYSJdOKb2vHGhNq-Xrj_SykfWdAAjZbuT9ki2bt0d5mkz3ntu4KbdgLXidy3p9T2srCAAKe29BZTjRhvllY9GfwPSnny8dHt5x0yNW2vBnMcqpP7F1dymE_ivr_nhckGn80Pr1fYhMDGwKpayN5x4nfcVgsXj9Vy6nQ"/>
+<span class="font-label-md text-label-md text-on-surface">Hello, Natasha</span>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[280px] pt-24 px-lg min-h-screen">
+<!-- Welcome Section -->
+<section class="mb-xl">
+<div class="bg-primary-container p-lg rounded-xl text-on-primary-container relative overflow-hidden flex items-center justify-between">
+<div class="relative z-10 max-w-xl">
+<h3 class="text-headline-lg font-headline-lg mb-xs">Welcome back, Natasha!</h3>
+<p class="text-body-md font-body-md opacity-90">Your academic journey is on track. Keep maintaining your presence to ensure a smooth semester end.</p>
+</div>
+<div class="hidden lg:block relative z-10 opacity-20 transform translate-x-4">
+<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">school</span>
+</div>
+<div class="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent"></div>
+</div>
+</section>
+<!-- Statistics Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md mb-xl">
+<!-- Current Percentage -->
+<div class="bento-card bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-label-md font-label-md text-on-surface-variant">Current Percentage</span>
+<span class="material-symbols-outlined text-tertiary" data-icon="analytics">analytics</span>
+</div>
+<div class="flex items-baseline gap-xs">
+<span class="text-headline-xl font-headline-xl text-on-surface">75%</span>
+<span class="text-label-sm font-label-sm text-tertiary font-bold">+2% from last week</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full mt-md overflow-hidden">
+<div class="bg-tertiary h-full rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<!-- Present Days -->
+<div class="bento-card bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-label-md font-label-md text-on-surface-variant">Days Present</span>
+<span class="material-symbols-outlined text-primary" data-icon="event_available">event_available</span>
+</div>
+<div>
+<span class="text-headline-xl font-headline-xl text-on-surface">25</span>
+<span class="text-body-md font-body-md text-on-surface-variant ml-xs">days</span>
+</div>
+<div class="mt-md text-label-sm font-label-sm text-on-surface-variant opacity-70">
+                    Target: 32 days
+                </div>
+</div>
+<!-- Absent Days -->
+<div class="bento-card bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-label-md font-label-md text-on-surface-variant">Days Absent</span>
+<span class="material-symbols-outlined text-error" data-icon="event_busy">event_busy</span>
+</div>
+<div>
+<span class="text-headline-xl font-headline-xl text-on-surface">4</span>
+<span class="text-body-md font-body-md text-on-surface-variant ml-xs">days</span>
+</div>
+<div class="mt-md text-label-sm font-label-sm text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
+                    Max allowed: 7
+                </div>
+</div>
+<!-- Current Day -->
+<div class="bento-card bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<span class="text-label-md font-label-md text-on-surface-variant">Current Day</span>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="today">today</span>
+</div>
+<div>
+<span class="text-headline-xl font-headline-xl text-on-surface">30</span>
+<span class="text-body-md font-body-md text-on-surface-variant ml-xs">of Semester</span>
+</div>
+<div class="mt-md">
+<div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1">
+<span>Day 30</span>
+<span>Day 90</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 33.3%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Descriptive Note Section -->
+<section class="mb-xl">
+<div class="bg-surface-container p-md rounded-lg border border-outline-variant/50">
+<div class="flex gap-sm items-start">
+<span class="material-symbols-outlined text-on-surface-variant mt-1" data-icon="info">info</span>
+<div>
+<h4 class="text-label-md font-label-md text-on-surface font-bold mb-xs">Note for Students</h4>
+<p class="text-body-md font-body-md text-on-surface-variant leading-relaxed">
+                            The values on MultiHolidays are approximate calculations based on the details provided by the college. 
+                            Attendance figures can vary due to recent entries or pending administrative updates. Please contact the academic office for official records.
+                        </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Contextual Visual Aid (Placeholder Image) -->
+<section class="mb-xl grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="h-64 rounded-xl overflow-hidden relative group">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A futuristic, clean classroom environment with minimal furniture, glowing blue accent lighting, and large digital screens displaying attendance charts. The style is modern corporate, organized, and encouraging, with a soft daylight glow coming from invisible windows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChngRqIv1cM9JW3fO2dFXyGSa5Wfb1lnLN_PsDs4TfnGAG5NClhzRoP0ZA0kWXYZwSJCDM414wvK5_HfkrbzgohY_Ox413Kc38Z-nDNXlga8z4rfzvHtcpJPcnZ6YLkXt8TcRFcCjSmai37oWKemCSGxc8KiDdqXULkjQV32oyikHOQ60frWcJ8jG7C89zkoxluJQZF4ChKaziUqzLmyiIhV2NPs2Yg0jSWxyxe375YnXhvu0b5IKSuw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-md">
+<h5 class="text-white font-headline-md text-headline-md">College Campus View</h5>
+<p class="text-white/80 text-label-md font-label-md">Main Auditorium Schedule</p>
+</div>
+</div>
+<div class="h-64 rounded-xl overflow-hidden relative group">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A focused close-up of a student's hands typing on a high-end laptop with clear, organized dashboard graphics on the screen. The setting is a minimalist library with light oak wood textures and soft focus academic books in the background. High-key lighting, bright and professional atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI6lsH0_TWMgY4BDofedZ5srEUt3taYRt6I7xdVsnsXFF05RAm5FjC52lo0iYtbzihIV1aPPH7SJcg6S76zD_F0Yazafp41lZL8GepShdsGL9bWmS15mPfryWNyDjNq5tq1YMUJENIYkmW5j7VD15mfVzIPPjIXjGB0OhPMaxuzRmbyl7jNKiebtZyghc8o24-YbO_T5e3R3W2w-VMh7yy6t8NF9UZus8kY8aPE9W4kVEHFAfERygdMQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-md">
+<h5 class="text-white font-headline-md text-headline-md">Study Planner</h5>
+<p class="text-white/80 text-label-md font-label-md">Manage your daily tasks effectively</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Anchor -->
+<footer class="ml-[280px] w-[calc(100%-280px)] bg-surface border-t border-outline-variant flex justify-between items-center py-md px-lg mt-xl">
+<div class="flex flex-col">
+<span class="text-label-md font-label-md font-bold text-on-surface">MultiHolidays</span>
+<p class="text-label-sm font-label-sm text-secondary">© 2024 MultiHolidays. All rights reserved.</p>
+</div>
+<div class="flex items-center gap-lg">
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href="#">Terms and Conditions</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all font-bold" href="#">Meet the Creator: Mukesh G</a>
+</div>
+</footer>
+<!-- Interactive Layer for micro-interactions -->
+<script>
+        // Simple active state simulation for side nav (already handled by classes but good for demo)
+        document.querySelectorAll('aside nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                // If we were handling routing, we would update active classes here
+            });
+        });
+
+        // Add a subtle ripple or interaction signal to cards
+        document.querySelectorAll('.bento-card').forEach(card => {
+            card.addEventListener('mousedown', function() {
+                this.classList.add('scale-95');
+            });
+            card.addEventListener('mouseup', function() {
+                this.classList.remove('scale-95');
+            });
+            card.addEventListener('mouseleave', function() {
+                this.classList.remove('scale-95');
+            });
+        });
+    </script>
+</body></html>

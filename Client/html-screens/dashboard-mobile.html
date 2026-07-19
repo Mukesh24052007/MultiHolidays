@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MultiHolidays Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#f7f9fb",
+                    "on-error-container": "#93000a",
+                    "on-secondary-container": "#5c647a",
+                    "primary-container": "#2563eb",
+                    "on-tertiary-container": "#bdffdb",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-background": "#191c1e",
+                    "surface-container-highest": "#e0e3e5",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed": "#00174b",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface": "#f7f9fb",
+                    "outline": "#737686",
+                    "error": "#ba1a1a",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "on-secondary": "#ffffff",
+                    "on-primary-container": "#eeefff",
+                    "surface-container-high": "#e6e8ea",
+                    "error-container": "#ffdad6",
+                    "inverse-surface": "#2d3133",
+                    "inverse-primary": "#b4c5ff",
+                    "on-secondary-fixed": "#131b2e",
+                    "secondary-container": "#dae2fd",
+                    "on-surface-variant": "#434655",
+                    "surface-dim": "#d8dadc",
+                    "primary": "#004ac6",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "tertiary-container": "#007d55",
+                    "surface-variant": "#e0e3e5",
+                    "surface-bright": "#f7f9fb",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "surface-tint": "#0053db",
+                    "surface-container": "#eceef0",
+                    "outline-variant": "#c3c6d7",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-surface": "#191c1e",
+                    "on-tertiary-fixed": "#002113",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#dae2fd",
+                    "secondary": "#565e74",
+                    "tertiary": "#006242",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary-fixed": "#dbe1ff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "container-max": "1280px",
+                    "lg": "32px",
+                    "sm": "16px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "xl": "48px",
+                    "base": "4px",
+                    "xs": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Hanken Grotesk"],
+                    "label-md": ["Inter"],
+                    "headline-xl": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f7f9fb;
+            font-family: 'Hanken Grotesk', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background min-h-screen pb-24">
+<!-- Top AppBar (Mobile View - Full width as sidebar is md:flex) -->
+<header class="fixed top-0 left-0 right-0 h-16 z-50 bg-surface/80 backdrop-blur-md flex justify-between items-center px-sm md:px-lg">
+<div class="flex items-center gap-xs">
+<span class="text-headline-md font-headline-md font-bold text-primary">MultiHolidays</span>
+</div>
+<div class="flex items-center gap-xs">
+<button class="hover:bg-surface-container-low rounded-full p-2 transition-opacity active:opacity-80">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-secondary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a university student with a friendly expression, soft natural lighting, set against a clean minimalist academic background with muted blue and white tones to match the corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIrlEly0VXXD7mApSAT2VUYRTsh10fKgky2OQkPkH8IG4mT9OyQFIoa9-T1ldxvqeuIkwZOaPOZhAOOC2pORG_RhbQQk4ECuGRdztXYVOclW7vVr1YvNgwayx8XENCNZrzAQhcZkSxv5y2N7lFxzKrI4LikUF__rI7LGsXfXYjH4E2sBt_yNmQpcB7P9Q9hG2WGp9Q4devRV-RXerhLVwcyUpFj1k_WzVhHyVsQCMMcIfqPHPQ2EM8pA"/>
+</div>
+</div>
+</header>
+<main class="pt-20 px-sm space-y-md">
+<!-- Welcome Banner -->
+<section class="relative overflow-hidden rounded-xl bg-primary-container p-md text-on-primary-container">
+<div class="relative z-10">
+<p class="font-label-sm text-label-sm uppercase tracking-wider opacity-80 mb-base">Dashboard Overview</p>
+<h1 class="font-headline-lg text-headline-lg mb-xs">Welcome back, Alex</h1>
+<p class="font-body-md text-body-md opacity-90 max-w-[80%]">You're on track! Your attendance is currently above the 75% threshold.</p>
+</div>
+<!-- Abstract decorative element -->
+<div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+<div class="absolute right-4 top-4 opacity-20">
+<span class="material-symbols-outlined text-[80px]" style="font-variation-settings: 'FILL' 1;">school</span>
+</div>
+</section>
+<!-- Attendance Stats Vertical Stack -->
+<section class="space-y-sm">
+<h2 class="font-headline-md text-headline-md px-base">Academic Metrics</h2>
+<div class="grid grid-cols-1 gap-sm">
+<!-- Main Attendance % Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex items-center justify-between hover:translate-y-[-2px] transition-all duration-200">
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant">Overall Attendance</p>
+<h3 class="font-headline-xl text-headline-xl text-primary mt-xs">88.5%</h3>
+</div>
+<div class="relative flex items-center justify-center w-20 h-20">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-high" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-tertiary" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" stroke-dasharray="213.6" stroke-dashoffset="24.5" stroke-width="8"></circle>
+</svg>
+<span class="absolute material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Secondary Metrics Grid -->
+<div class="grid grid-cols-2 gap-sm">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+<span class="material-symbols-outlined text-primary mb-xs">event_available</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Days Present</p>
+<p class="font-headline-md text-headline-md">115</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+<span class="material-symbols-outlined text-error mb-xs">event_busy</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Days Absent</p>
+<p class="font-headline-md text-headline-md">12</p>
+</div>
+</div>
+<!-- Current Day Card -->
+<div class="bg-secondary-container/30 border border-primary/10 rounded-xl p-md flex items-center gap-md">
+<div class="bg-primary text-on-primary w-12 h-12 rounded-lg flex flex-col items-center justify-center shrink-0">
+<span class="font-label-sm text-[10px] leading-none uppercase">Oct</span>
+<span class="font-headline-md text-headline-md leading-none">24</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary font-bold">Today's Schedule</p>
+<p class="font-body-md text-body-md text-on-surface">3 Lectures Scheduled</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-on-surface-variant">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Horizontal Scrollable: Note for Students & Campus -->
+<section class="space-y-sm">
+<div class="flex justify-between items-end px-base">
+<h2 class="font-headline-md text-headline-md">Announcements</h2>
+<button class="text-primary font-label-md text-label-md hover:underline transition-all">View All</button>
+</div>
+<div class="flex overflow-x-auto gap-md no-scrollbar pb-xs snap-x">
+<!-- Note for Students -->
+<div class="snap-start shrink-0 w-[85%] bg-surface-container-low border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-xs mb-sm">
+<span class="material-symbols-outlined text-tertiary">info</span>
+<span class="font-label-md text-label-md text-tertiary uppercase font-bold">Important Note</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            Mid-term attendance reviews are scheduled for next week. Please ensure all medical leaves are documented.
+                        </p>
+</div>
+<button class="mt-md font-label-sm text-label-sm text-primary flex items-center gap-xs">
+                        Read Policy <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<!-- Campus Image 1 -->
+<div class="snap-start shrink-0 w-[85%] relative h-[200px] rounded-xl overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
+<img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A stunning wide-angle architectural shot of a modern glass-and-steel university library during the golden hour. The lighting is warm and inviting, highlighting the clean geometric lines of the building. The overall atmosphere is scholarly and inspiring, following a high-end corporate architectural photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALzT6df12VIgU9i4zo_gVk_ZxRQxDHixFbmDUgsMknDCY-boqk6-HbzjdksvCNagrMjadrURfhXId2hXCpDOjpeSS0qQkOlSFjmERZLWOiQ8c9hHw1G4qmyV6cCqgGFkz_vzH8ENBnJj5vFV66hK1wfKuDuBtVkgyX8rzeMfG0LXRLl0D1eKsx0_6o1QZ5r-VtkeXg0jUCSn7J00btXNXR6_ELIw3C4z5kFKrQ6AhBkWVXdUAK9E_uIQ"/>
+<div class="absolute bottom-md left-md z-20 text-white">
+<p class="font-label-sm text-label-sm uppercase tracking-wider opacity-80">Campus Life</p>
+<p class="font-headline-sm text-body-lg font-bold">Central Library Annex</p>
+</div>
+</div>
+<!-- Campus Image 2 -->
+<div class="snap-start shrink-0 w-[85%] relative h-[200px] rounded-xl overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
+<img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="An expansive aerial view of a pristine university campus park with lush green lawns and organized paved walkways. Sunlight filters through rows of trees, creating long soft shadows. The scene communicates a sense of order, peacefulness, and high-performance academic environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1uoDWzhRb4vHDUfYIdR_d_wzZG6xynK8FMoc0QnQgIGaG4xmrRY5sqjlkBs3MXSZ-L-3s709iJ4_mShjYTRbpK_YTaYP0zHIb-O337k_EAm7Bk6_enjYnwRfsVGs0DtdFSuDTodDZvOM5c9Ni-WzOz7TJu0kC-dDk9Jv9dy4OOggJBSKXjIBobBdURxHMAsS8opNHFSKmBTQfUHxccQRBVYJt_dSUImXJwhZRMPgsiSmKy6aQ7ci1NA"/>
+<div class="absolute bottom-md left-md z-20 text-white">
+<p class="font-label-sm text-label-sm uppercase tracking-wider opacity-80">Campus Life</p>
+<p class="font-headline-sm text-body-lg font-bold">Student Commons</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Attendance Table / Recent Activity (Bento style) -->
+<section class="space-y-sm">
+<h2 class="font-headline-md text-headline-md px-base">Recent Attendance</h2>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl divide-y divide-outline-variant overflow-hidden">
+<div class="p-sm flex items-center justify-between hover:bg-surface-container transition-colors cursor-pointer">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary">check</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Mathematics II</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Yesterday, 09:00 AM</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary bg-tertiary-fixed-dim/20 px-2 py-1 rounded">Present</span>
+</div>
+<div class="p-sm flex items-center justify-between hover:bg-surface-container transition-colors cursor-pointer">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-error-container/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-error">close</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Data Structures</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Oct 22, 11:30 AM</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-error bg-error-container/20 px-2 py-1 rounded">Absent</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Mobile specific active state mapping) -->
+<nav class="fixed bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-lg border-t border-outline-variant z-50 flex justify-around items-center h-20 px-sm md:hidden">
+<!-- Dashboard (Active) -->
+<a class="flex flex-col items-center gap-1 flex-1 text-primary active:scale-95 transition-all duration-100" href="#">
+<div class="bg-secondary-container/30 px-5 py-1 rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold">Dashboard</span>
+</a>
+<!-- Leave Calendar -->
+<a class="flex flex-col items-center gap-1 flex-1 text-on-surface-variant hover:text-primary active:scale-95 transition-all duration-100" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-sm text-label-sm">Calendar</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center gap-1 flex-1 text-on-surface-variant hover:text-primary active:scale-95 transition-all duration-100" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<!-- FAB for Apply for Leave -->
+<button class="fixed bottom-24 right-sm bg-primary text-on-primary w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-all z-40">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+<footer class="mt-xl px-lg py-md text-center border-t border-outline-variant bg-surface">
+<p class="font-label-sm text-label-sm text-secondary">© 2024 MultiHolidays. All rights reserved.</p>
+<div class="flex justify-center gap-md mt-sm">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms and Conditions</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Meet the Creator</a>
+</div>
+</footer>
+<script>
+        // Micro-interaction for cards
+        document.querySelectorAll('.hover\\:translate-y-\\[-2px\\]').forEach(card => {
+            card.addEventListener('touchstart', () => {
+                card.classList.add('scale-[0.98]');
+            });
+            card.addEventListener('touchend', () => {
+                card.classList.remove('scale-[0.98]');
+            });
+        });
+    </script>
+</body></html>
