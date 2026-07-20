@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import MobileHeader from '@/components/layout/MobileHeader';
@@ -23,7 +25,32 @@ export const metadata: Metadata = {
   description: 'View your attendance metrics and academic dashboard.',
 };
 
-export default function DashboardPage() {
+/**
+ * Silently verify the session server-side before rendering.
+ * Calls GET /api/auth/me with the cookie forwarded from the browser.
+ * If the token is missing or expired the server returns 401 and we redirect.
+ */
+async function getAuthenticatedAdmin() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value;
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PRIVATE_API_URL}/auth/me`, {
+      headers: { Cookie: `token=${token}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.admin as { id: string; email: string; name: string };
+  } catch {
+    return null;
+  }
+}
+
+export default async function DashboardPage() {
+  const admin = await getAuthenticatedAdmin();
+  if (!admin) redirect('/');
   return (
     <div className="w-full min-h-screen">
       {/* ── Mobile ── */}

@@ -1,0 +1,37 @@
+{
+  "name": "multiholidays",
+  "version": "1.0.0",
+  "main": "server/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server/server.js",
+    "dev-build": "npm install && npm install --prefix client",
+    "start": "node server/server.js",
+    "build": "npm install && npm install --prefix client && npm run build --prefix client"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mukesh24052007/MultiHolidays.git"
+  },
+  "keywords": [],
+  "author": "hotHeartStar5:55",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mukesh24052007/MultiHolidays/issues"
+  },
+  "homepage": "https://github.com/Mukesh24052007/MultiHolidays/#readme",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.18.1",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
