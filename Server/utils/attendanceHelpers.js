@@ -125,3 +125,79 @@ export const getWorkingDays = (startStr, endStr) => {
 
   return days;
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Attendance Percentage Calculation
+//
+// Rules:
+//   - Starts at 100% on the very first working day
+//   - Each absence  → -3%   (applied immediately on that day)
+//   - Each presence → +0.5% (applied immediately on that day)
+//   - Clamped to [0, 100]
+//
+// Working days with no attendance record yet are treated as "unmarked" and do
+// NOT change the running percentage (we only apply deltas for marked days).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const ABSENCE_PENALTY  = 3;    // percentage points deducted per absence
+export const PRESENCE_REWARD  = 0.5;  // percentage points added per presence
+
+/**
+ * Given a sorted array of attendance records and the full list of working days
+ * up to today, returns:
+ *   - currentPercentage   : the live attendance %
+ *   - breakdown           : day-by-day log showing delta and running total
+ *   - totalWorkingDays
+ *   - presentDays
+ *   - absentDays
+ *   - unmarkedDays
+ *
+ * @param {Array<{date: string, status: "present"|"absent"}>} records  – sorted by date asc
+ * @param {string[]} workingDays  – all working days from start through today, sorted asc
+ */
+export const calculateAttendancePercentage = (records, workingDays) => {
+  // Build a quick lookup: date → status
+  const statusMap = {};
+  for (const r of records) {
+    statusMap[r.date] = r.status;
+  }
+
+  let percentage = 100;
+  let presentDays  = 0;
+  let absentDays   = 0;
+  let unmarkedDays = 0;
+
+  const breakdown = workingDays.map((date) => {
+    const status = statusMap[date] ?? "unmarked";
+    let delta = 0;
+
+    if (status === "absent") {
+      delta = -ABSENCE_PENALTY;
+      absentDays++;
+    } else if (status === "present") {
+      delta = +PRESENCE_REWARD;
+      presentDays++;
+    } else {
+      unmarkedDays++;
+    }
+
+    percentage = Math.min(100, Math.max(0, percentage + delta));
+
+    return {
+      date,
+      status,
+      delta,
+      // Round to 2 decimal places to avoid floating-point noise
+      percentageAfter: Math.round(percentage * 100) / 100,
+    };
+  });
+
+  return {
+    currentPercentage: Math.round(percentage * 100) / 100,
+    totalWorkingDays: workingDays.length,
+    presentDays,
+    absentDays,
+    unmarkedDays,
+    breakdown,
+  };
+};

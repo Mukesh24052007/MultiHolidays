@@ -103,3 +103,43 @@ export async function getUserAttendance(
   );
   return data;
 }
+
+// ── Attendance percentage ─────────────────────────────────────────────────────
+
+export interface AttendancePercentageResponse {
+  success: boolean;
+  student: { id: string; name?: string; studentId?: string };
+  attendanceWindow: { from: string; to: string };
+  percentage: number;
+  summary: {
+    totalWorkingDays: number;
+    presentDays: number;
+    absentDays: number;
+    unmarkedDays: number;
+  };
+  rules: {
+    startingPercentage: number;
+    absencePenalty: string;
+    presenceReward: string;
+    note: string;
+  };
+}
+
+/**
+ * GET /api/attendance/user/:userId/percentage
+ * Returns the live attendance percentage for a user.
+ * Optionally pass upToDate (YYYY-MM-DD) and breakdown flag.
+ */
+export async function getAttendancePercentage(
+  userId: string,
+  opts?: { upToDate?: string; breakdown?: boolean },
+): Promise<AttendancePercentageResponse> {
+  const params = new URLSearchParams();
+  if (opts?.upToDate)  params.set('upToDate',  opts.upToDate);
+  if (opts?.breakdown) params.set('breakdown', 'true');
+  const qs = params.toString();
+  const { data } = await api.get<AttendancePercentageResponse>(
+    `/attendance/user/${userId}/percentage${qs ? `?${qs}` : ''}`,
+  );
+  return data;
+}

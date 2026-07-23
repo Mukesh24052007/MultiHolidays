@@ -8,6 +8,7 @@ import {
   getUserAttendanceByDate,
   deleteAttendanceRecord,
   getWorkingDaysList,
+  getAttendancePercentage,
 } from "../controllers/attendanceController.js";
 
 const router = Router();
@@ -36,6 +37,10 @@ router.get("/working-days", getWorkingDaysList);
 // All attendance records for a student (filter by ?month=&year=)
 // GET /api/attendance/user/:userId?month=7&year=2026
 router.get("/user/:userId", getUserAttendance);
+
+// Calculated attendance percentage for a student
+// GET /api/attendance/user/:userId/percentage?upToDate=2026-07-25&breakdown=true
+router.get("/user/:userId/percentage", getAttendancePercentage);
 
 // A student's record for one specific date
 // GET /api/attendance/user/:userId/date/:date
