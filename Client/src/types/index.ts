@@ -38,7 +38,7 @@ export type ProfileField = {
   editable?: boolean;
 };
 
-export type CalendarDayStatus = 'present' | 'absent' | 'leave' | 'today' | 'weekend' | 'holiday' | 'unmarked' | 'empty' | 'upcoming';
+export type CalendarDayStatus = 'present' | 'absent' | 'leave' | 'today' | 'weekend' | 'holiday' | 'unmarked' | 'empty' | 'upcoming' | 'leave-selected';
 
 export type CalendarDay = {
   day: number | null;

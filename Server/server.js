@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import connectDB from "./utils/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
+import leaveRoutes from "./routes/leaveRoutes.js";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ if (process.env.NODE_ENV !== "production") {
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/leave", leaveRoutes);
 
 // ── Start server ──────────────────────────────────────────────────────────────
 app.listen(PORT, () => {

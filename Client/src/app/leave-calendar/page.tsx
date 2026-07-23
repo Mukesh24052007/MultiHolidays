@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import MobileHeader from '@/components/layout/MobileHeader';
@@ -8,12 +8,13 @@ import BottomNav from '@/components/layout/BottomNav';
 import Footer from '@/components/layout/Footer';
 import Icon from '@/components/ui/Icon';
 import CalendarGrid from '@/components/calendar/CalendarGrid';
-import LeaveForm from '@/components/calendar/LeaveForm';
+import LeaveCheckModal from '@/components/calendar/LeaveCheckModal';
+import LeaveTracker from '@/components/calendar/LeaveTracker';
 import LeaveSummaryCards from '@/components/calendar/LeaveSummaryCards';
 import LeavePredictionCard from '@/components/calendar/LeavePredictionCard';
-import { SEMESTER_MONTHS, WEEKDAY_HEADERS_SHORT, buildMonthsFromRecords, getTodayIso } from '@/constants/calendar';
+import { SEMESTER_MONTHS, WEEKDAY_HEADERS_SHORT, buildMonthsFromRecords } from '@/constants/calendar';
 import { getMe } from '@/lib/auth';
-import { getUserAttendance, markAttendance, getAttendancePercentage } from '@/lib/attendance';
+import { getUserAttendance, markAttendance, getAttendancePercentage, getLeaveRequests } from '@/lib/attendance';
 import type { AttendanceStatus, AttendancePercentageResponse } from '@/lib/attendance';
 import type { CalendarDay } from '@/types';
 
@@ -29,7 +30,7 @@ function formatIsoForDisplay(iso: string) {
   });
 }
 
-// ─── Mark-attendance modal (inline, for clicking past unmarked/marked days) ───
+// ─── Mark-attendance modal ────────────────────────────────────────────────────
 function MarkModal({
   date, userId, currentStatus, onMarked, onClose,
 }: {
@@ -39,7 +40,6 @@ function MarkModal({
   onClose: () => void;
 }) {
   const isEdit = currentStatus === 'present' || currentStatus === 'absent';
-  // Pre-select the existing value when editing
   const [selected, setSelected] = useState<AttendanceStatus | null>(
     isEdit ? (currentStatus as AttendanceStatus) : null
   );
@@ -67,14 +67,10 @@ function MarkModal({
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-colors">
           <Icon name="close" />
         </button>
-
         <div className="flex items-start gap-3 mb-5 pr-8">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isEdit ? 'bg-blue-100' : 'bg-amber-100'}`}>
-            <Icon
-              name={isEdit ? 'edit_note' : 'edit_calendar'}
-              filled
-              className={`text-[20px] ${isEdit ? 'text-blue-600' : 'text-amber-600'}`}
-            />
+            <Icon name={isEdit ? 'edit_note' : 'edit_calendar'} filled
+              className={`text-[20px] ${isEdit ? 'text-blue-600' : 'text-amber-600'}`} />
           </div>
           <div>
             <h2 className="text-base font-semibold text-gray-900">
@@ -83,17 +79,13 @@ function MarkModal({
             <p className="text-xs text-gray-500 mt-0.5">{formatIsoForDisplay(date)}</p>
             {isEdit && (
               <span className={`inline-flex items-center gap-1 mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                currentStatus === 'present'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-red-100 text-red-600'
-              }`}>
+                currentStatus === 'present' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                 <Icon name={currentStatus === 'present' ? 'check_circle' : 'cancel'} filled className="text-[12px]" />
                 Currently: {currentStatus}
               </span>
             )}
           </div>
         </div>
-
         <div className="grid grid-cols-2 gap-3 mb-5">
           {(['present', 'absent'] as AttendanceStatus[]).map(s => (
             <button key={s} onClick={() => { setSelected(s); setError(null); }}
@@ -115,13 +107,11 @@ function MarkModal({
             </button>
           ))}
         </div>
-
         {error && (
           <div className="flex gap-2 mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
             <Icon name="error" className="text-red-500 text-[16px] shrink-0 mt-0.5" />{error}
           </div>
         )}
-
         <button onClick={handleSubmit}
           disabled={!selected || loading || (isEdit && selected === currentStatus)}
           className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
@@ -134,11 +124,8 @@ function MarkModal({
               </span>
             : isEdit ? 'Update Attendance' : 'Confirm'}
         </button>
-
         {isEdit && selected === currentStatus && (
-          <p className="text-xs text-gray-400 text-center mt-2">
-            Select a different status to update.
-          </p>
+          <p className="text-xs text-gray-400 text-center mt-2">Select a different status to update.</p>
         )}
       </div>
     </div>
@@ -152,11 +139,18 @@ export default function CalendarPage() {
   const [userId, setUserId]           = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(true);
   const [pctData, setPctData]         = useState<AttendancePercentageResponse | null>(null);
-  // Modal state: which date was clicked + its current status
+
+  // Mark-attendance modal
   const [modalDate, setModalDate]     = useState<string | null>(null);
   const [modalStatus, setModalStatus] = useState<CalendarDay['status']>('unmarked');
 
-  // ── Fetch attendance records + percentage once on mount ────────────────────
+  // Leave selection state
+  const [leaveSelectMode, setLeaveSelectMode]     = useState(false);
+  const [selectedLeaveDates, setSelectedLeaveDates] = useState<Set<string>>(new Set());
+  const [showLeaveModal, setShowLeaveModal]         = useState(false);
+  const [leaveRefreshKey, setLeaveRefreshKey]       = useState(0);
+
+  // ── Data fetch ────────────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -164,17 +158,46 @@ export default function CalendarPage() {
         const user = await getMe();
         if (cancelled) return;
         setUserId(user.id);
-
-        // Run both fetches in parallel
-        const [res, pct] = await Promise.all([
+        const [res, pct, leaveRes] = await Promise.all([
           getUserAttendance(user.id),
           getAttendancePercentage(user.id),
+          getLeaveRequests(user.id),
         ]);
         if (cancelled) return;
-        setMonths(buildMonthsFromRecords(res.records));
+
+        // Build calendar from attendance records
+        const builtMonths = buildMonthsFromRecords(res.records);
+
+        // Overlay saved leave dates (non-cancelled) onto the calendar as 'leave'
+        const leaveDates = new Set<string>();
+        for (const lr of leaveRes.leaveRequests) {
+          if (lr.status === 'cancelled') continue;
+          const { startDate, endDate } = lr.leaveWindow;
+          // Iterate every date in the window and mark it
+          const cur = new Date(startDate);
+          const end = new Date(endDate);
+          while (cur <= end) {
+            leaveDates.add(cur.toISOString().slice(0, 10));
+            cur.setDate(cur.getDate() + 1);
+          }
+        }
+
+        if (leaveDates.size > 0) {
+          setMonths(builtMonths.map(m => ({
+            ...m,
+            days: m.days.map(d => {
+              if (d.day === null) return d;
+              const iso = `${m.year}-${String(m.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+              return leaveDates.has(iso) ? { ...d, status: 'leave' as const } : d;
+            }),
+          })));
+        } else {
+          setMonths(builtMonths);
+        }
+
         setPctData(pct);
       } catch {
-        // silently fallback to static months / no percentage
+        // silently fallback
       } finally {
         if (!cancelled) setLoadingData(false);
       }
@@ -182,24 +205,70 @@ export default function CalendarPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // ── When a day is marked via the modal, patch just that cell ──────────────
+  // ── Leave-mode helpers ────────────────────────────────────────────────────
+  function enterLeaveSelectMode() {
+    setLeaveSelectMode(true);
+    setSelectedLeaveDates(new Set());
+  }
+
+  function exitLeaveSelectMode() {
+    setLeaveSelectMode(false);
+    setSelectedLeaveDates(new Set());
+  }
+
+  function openLeaveModal() {
+    if (selectedLeaveDates.size === 0) return;
+    setShowLeaveModal(true);
+  }
+
+  function handleLeaveConfirm() {
+    setShowLeaveModal(false);
+    exitLeaveSelectMode();
+  }
+
+  function handleLeaveSaved(_id: string, savedDates: string[]) {
+    // Mark the saved leave dates as 'leave' in the calendar grid
+    setMonths(prev => prev.map(m => ({
+      ...m,
+      days: m.days.map(d => {
+        if (d.day === null) return d;
+        const iso = `${m.year}-${String(m.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+        return savedDates.includes(iso) ? { ...d, status: 'leave' as const } : d;
+      }),
+    })));
+    setShowLeaveModal(false);
+    exitLeaveSelectMode();
+    setLeaveRefreshKey(k => k + 1);
+  }
+
+  // ── Day click ────────────────────────────────────────────────────────────
+  const handleDayClick = useCallback((iso: string, status: CalendarDay['status']) => {
+    if (leaveSelectMode) {
+      // Toggle upcoming days; leave-selected also maps from 'upcoming' in visual layer
+      if (status !== 'upcoming' && status !== 'leave-selected') return;
+      setSelectedLeaveDates(prev => {
+        const next = new Set(prev);
+        if (next.has(iso)) next.delete(iso); else next.add(iso);
+        return next;
+      });
+      return;
+    }
+    // Normal mode
+    if (status === 'holiday' || status === 'empty' || status === 'upcoming' || status === 'leave') return;
+    setModalStatus(status);
+    setModalDate(iso);
+  }, [leaveSelectMode]);
+
   function handleMarked(date: string, status: AttendanceStatus) {
     setMonths(prev => prev.map(m => ({
       ...m,
       days: m.days.map(d => {
         if (d.day === null) return d;
-        const [y, mo, day] = date.split('-');
         const iso = `${m.year}-${String(m.month).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`;
-        return iso === `${y}-${mo}-${day}` ? { ...d, status } : d;
+        return iso === date ? { ...d, status } : d;
       }),
     })));
     setModalDate(null);
-  }
-
-  function handleDayClick(iso: string, status: CalendarDay['status']) {
-    if (status === 'holiday' || status === 'empty' || status === 'upcoming') return;
-    setModalStatus(status);
-    setModalDate(iso);
   }
 
   const current       = months[monthIndex];
@@ -211,16 +280,23 @@ export default function CalendarPage() {
   const workedDays    = presentCount + absentCount;
   const attendancePct = workedDays > 0 ? Math.round((presentCount / workedDays) * 100) : 0;
 
+  const sortedLeaveDates = [...selectedLeaveDates].sort();
+
   return (
     <div className="w-full min-h-screen">
-      {/* Mark / Edit attendance modal */}
-      {modalDate && userId && (
-        <MarkModal
-          date={modalDate}
+      {/* Mark/Edit modal */}
+      {modalDate && userId && !leaveSelectMode && (
+        <MarkModal date={modalDate} userId={userId} currentStatus={modalStatus}
+          onMarked={handleMarked} onClose={() => setModalDate(null)} />
+      )}
+
+      {/* Leave check modal */}
+      {showLeaveModal && userId && (
+        <LeaveCheckModal
           userId={userId}
-          currentStatus={modalStatus}
-          onMarked={handleMarked}
-          onClose={() => setModalDate(null)}
+          selectedDates={sortedLeaveDates}
+          onClose={() => setShowLeaveModal(false)}
+          onSaved={handleLeaveSaved}
         />
       )}
 
@@ -230,14 +306,43 @@ export default function CalendarPage() {
         <main className="pt-20 pb-24 px-4 min-h-screen">
           <div className="max-w-[448px] mx-auto space-y-4">
 
-            {/* ── Check Leave — highest-priority CTA (mobile) ── */}
-            <button
-              className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3.5 rounded-2xl font-bold text-base shadow-md hover:bg-on-primary-fixed-variant active:scale-[0.98] transition-all duration-150 animate-fade-in"
-              aria-label="Check Leave"
-            >
-              <Icon name="event_available" filled className="text-[20px]" />
-              Check Leave
-            </button>
+            {/* Leave CTA — mobile */}
+            {!leaveSelectMode ? (
+              <button
+                onClick={enterLeaveSelectMode}
+                className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3.5 rounded-2xl font-bold text-base shadow-md hover:bg-on-primary-fixed-variant active:scale-[0.98] transition-all duration-150 animate-fade-in"
+                aria-label="Check Leave"
+              >
+                <Icon name="event_available" filled className="text-[20px]" />
+                Check Leave
+              </button>
+            ) : (
+              <div className="flex gap-2 animate-fade-in">
+                <button onClick={exitLeaveSelectMode}
+                  className="flex-1 flex items-center justify-center gap-1.5 border border-gray-300 text-gray-700 py-3 rounded-2xl font-semibold text-sm active:scale-[0.98] transition-all">
+                  <Icon name="close" className="text-[18px]" />
+                  Cancel
+                </button>
+                <button onClick={openLeaveModal}
+                  disabled={selectedLeaveDates.size === 0}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-all ${
+                    selectedLeaveDates.size > 0
+                      ? 'bg-primary text-on-primary shadow-md hover:bg-on-primary-fixed-variant'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                >
+                  <Icon name="query_stats" filled className="text-[18px]" />
+                  {selectedLeaveDates.size > 0
+                    ? `Check ${selectedLeaveDates.size} day${selectedLeaveDates.size > 1 ? 's' : ''}`
+                    : 'Select days'}
+                </button>
+              </div>
+            )}
+
+            {leaveSelectMode && (
+              <p className="text-xs text-center text-primary font-medium -mt-1 animate-fade-in">
+                Tap upcoming days on the calendar to mark them as leave
+              </p>
+            )}
 
             <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 animate-fade-in">
               {/* Month nav */}
@@ -264,38 +369,50 @@ export default function CalendarPage() {
                 ))}
               </div>
 
-              {/* Day cells */}
+              {/* Day cells — mobile */}
               <div className="grid grid-cols-7 gap-y-1">
                 {current.days.map((day, i) => {
                   if (day.day === null) return <div key={i} />;
-                  const { status } = day;
-                  const isHoliday = status === 'holiday';
-                  const isUnmarked = status === 'unmarked';
-                  const isToday   = status === 'today';
-                  const isPresent = status === 'present';
-                  const isAbsent  = status === 'absent';
-
                   const iso = `${current.year}-${String(current.month).padStart(2,'0')}-${String(day.day).padStart(2,'0')}`;
+                  const isLeaveSelected = leaveSelectMode && selectedLeaveDates.has(iso);
+                  const { status } = day;
+                  const isHoliday  = status === 'holiday';
+                  const isUnmarked = status === 'unmarked';
+                  const isToday    = status === 'today';
+                  const isPresent  = status === 'present';
+                  const isAbsent   = status === 'absent';
+                  const isUpcoming = status === 'upcoming';
+                  const isLeave    = status === 'leave';
 
                   return (
                     <div key={i} onClick={() => handleDayClick(iso, status)}
                       className={`relative flex flex-col items-center justify-center py-1.5 text-sm rounded-lg overflow-hidden
-                        ${isHoliday  ? 'cursor-not-allowed' :
-                          isUnmarked ? 'cursor-pointer bg-amber-50 border border-amber-400' :
-                          isToday    ? 'bg-primary/10 text-primary font-bold border border-primary/30' :
-                          isAbsent   ? 'bg-error-container/30 cursor-pointer' :
-                          isPresent  ? 'cursor-pointer' : 'cursor-pointer'}`}>
+                        ${isHoliday      ? 'cursor-not-allowed' :
+                          isLeave        ? 'cursor-default border-2 border-dashed border-primary bg-primary/10' :
+                          isLeaveSelected ? 'cursor-pointer bg-primary/15 border-2 border-primary ring-1 ring-primary/30' :
+                          leaveSelectMode && isUpcoming ? 'cursor-pointer bg-primary/5 border border-primary/30 hover:bg-primary/10' :
+                          isUnmarked     ? 'cursor-pointer bg-amber-50 border border-amber-400' :
+                          isToday        ? 'bg-primary/10 text-primary font-bold border border-primary/30' :
+                          isAbsent       ? 'bg-error-container/30 cursor-pointer' :
+                          isPresent      ? 'cursor-pointer' : 'cursor-pointer'}`}>
                       {isHoliday && (
                         <div aria-hidden="true" className="absolute inset-0 rounded-lg"
                           style={{ background: 'repeating-linear-gradient(45deg,#f9fafb,#f9fafb 3px,#e5e7eb 3px,#e5e7eb 6px)' }} />
                       )}
-                      <span className={`relative z-10 ${isHoliday ? 'text-gray-300 font-semibold' : isPresent || isUnmarked ? 'font-semibold' : ''} ${isUnmarked ? 'text-amber-700' : ''}`}>
+                      <span className={`relative z-10 ${
+                        isHoliday ? 'text-gray-300 font-semibold' :
+                        isLeave   ? 'font-bold text-primary' :
+                        isLeaveSelected ? 'font-bold text-primary' :
+                        isPresent || isUnmarked ? 'font-semibold' : ''
+                      } ${isUnmarked ? 'text-amber-700' : ''}`}>
                         {day.day}
                       </span>
-                      {isPresent  && <span className="w-1.5 h-1.5 rounded-full bg-tertiary mt-0.5" />}
-                      {isAbsent   && <span className="w-1.5 h-1.5 rounded-full bg-error mt-0.5" />}
-                      {isToday    && <span className="w-1.5 h-1.5 rounded-full bg-primary mt-0.5" />}
-                      {isUnmarked && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-0.5" />}
+                      {isPresent       && <span className="w-1.5 h-1.5 rounded-full bg-tertiary mt-0.5" />}
+                      {isAbsent        && <span className="w-1.5 h-1.5 rounded-full bg-error mt-0.5" />}
+                      {isToday         && <span className="w-1.5 h-1.5 rounded-full bg-primary mt-0.5" />}
+                      {isUnmarked      && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-0.5" />}
+                      {isLeaveSelected && <span className="w-1.5 h-1.5 rounded-full bg-primary mt-0.5" />}
+                      {isLeave         && <span className="w-1.5 h-1.5 rounded-full bg-primary/60 mt-0.5" />}
                     </div>
                   );
                 })}
@@ -321,7 +438,6 @@ export default function CalendarPage() {
               ))}
             </div>
 
-            <LeaveForm />
             <LeaveSummaryCards
               percentage={pctData?.percentage ?? 0}
               presentDays={pctData?.summary.presentDays ?? 0}
@@ -333,6 +449,7 @@ export default function CalendarPage() {
               absentDays={pctData?.summary.absentDays ?? 0}
               loading={loadingData}
             />
+            <LeaveTracker userId={userId ?? ''} refreshKey={leaveRefreshKey} />
           </div>
         </main>
         <BottomNav activeHref="/leave-calendar" />
@@ -359,26 +476,64 @@ export default function CalendarPage() {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant p-1 rounded-xl shadow-sm w-full md:w-auto shrink-0">
-                <div className="relative flex-grow">
-                  <Icon name="date_range" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
-                  <input type="number" placeholder="Days of leave needed…"
-                    className="pl-10 pr-4 py-2 bg-transparent border-none focus:ring-0 text-body-md w-full md:w-56 placeholder:text-outline" />
-                </div>
-                <button className="flex items-center gap-1.5 bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold text-sm shadow hover:bg-on-primary-fixed-variant active:scale-[0.97] transition-all duration-150">
+
+              {/* Check Leave CTA — desktop */}
+              {!leaveSelectMode ? (
+                <button
+                  onClick={enterLeaveSelectMode}
+                  className="flex items-center gap-1.5 bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold text-sm shadow hover:bg-on-primary-fixed-variant active:scale-[0.97] transition-all duration-150 shrink-0"
+                >
                   <Icon name="event_available" filled className="text-[16px]" />
                   Check Leave
                 </button>
-              </div>
+              ) : (
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-sm text-primary font-medium hidden lg:block">
+                    {selectedLeaveDates.size === 0
+                      ? 'Click upcoming days to select leave'
+                      : `${selectedLeaveDates.size} day${selectedLeaveDates.size > 1 ? 's' : ''} selected`}
+                  </span>
+                  <button onClick={exitLeaveSelectMode}
+                    className="flex items-center gap-1 border border-gray-300 text-gray-700 px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors">
+                    <Icon name="close" className="text-[16px]" />
+                    Cancel
+                  </button>
+                  <button onClick={openLeaveModal}
+                    disabled={selectedLeaveDates.size === 0}
+                    className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-[0.97] ${
+                      selectedLeaveDates.size > 0
+                        ? 'bg-primary text-on-primary shadow hover:bg-on-primary-fixed-variant'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                  >
+                    <Icon name="query_stats" filled className="text-[16px]" />
+                    {selectedLeaveDates.size > 0 ? 'Check Recovery' : 'Select days'}
+                  </button>
+                </div>
+              )}
             </div>
 
+            {/* Leave-select mode banner */}
+            {leaveSelectMode && (
+              <div className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in">
+                <Icon name="touch_app" filled className="text-primary text-[22px] shrink-0" />
+                <p className="text-sm text-primary flex-1">
+                  <span className="font-semibold">Leave selection active.</span> Click any upcoming day on the calendar to toggle it.
+                  {selectedLeaveDates.size > 0 && (
+                    <span className="ml-1 font-semibold">
+                      {selectedLeaveDates.size} day{selectedLeaveDates.size > 1 ? 's' : ''} selected.
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+
             {/* Unmarked alert banner */}
-            {!loadingData && unmarkedCount > 0 && (
+            {!loadingData && !leaveSelectMode && unmarkedCount > 0 && (
               <div className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
                 <Icon name="pending_actions" filled className="text-amber-500 text-[22px] shrink-0" />
                 <p className="text-sm text-amber-800 flex-1">
                   <span className="font-semibold">{unmarkedCount} day{unmarkedCount > 1 ? 's' : ''}</span> in {current.label} still unmarked.
-                  Click any <span className="font-semibold text-amber-600">amber cell</span> on the calendar to mark it.
+                  Click any <span className="font-semibold text-amber-600">amber cell</span> to mark it.
                 </p>
               </div>
             )}
@@ -392,6 +547,8 @@ export default function CalendarPage() {
                   onPrev={canGoBack ? () => setMonthIndex(i => i - 1) : undefined}
                   onNext={canGoFwd  ? () => setMonthIndex(i => i + 1) : undefined}
                   onDayClick={handleDayClick}
+                  leaveSelectMode={leaveSelectMode}
+                  selectedLeaveDates={selectedLeaveDates}
                 />
               </div>
 
@@ -437,24 +594,7 @@ export default function CalendarPage() {
                   loading={loadingData}
                 />
 
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-4">
-                  <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Leave Balance</h3>
-                  {[
-                    { label: 'Annual Leave', used: 5, total: 20, color: 'bg-primary' },
-                    { label: 'Sick Leave',   used: 2, total: 10, color: 'bg-error' },
-                    { label: 'Casual Leave', used: 1, total: 5,  color: 'bg-tertiary' },
-                  ].map(item => (
-                    <div key={item.label}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-on-surface">{item.label}</span>
-                        <span className="text-xs text-on-surface-variant">{item.used}/{item.total} days</span>
-                      </div>
-                      <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
-                        <div className={`${item.color} h-full rounded-full`} style={{ width: `${(item.used / item.total) * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <LeaveTracker userId={userId ?? ''} refreshKey={leaveRefreshKey} />
               </div>
             </div>
           </div>
