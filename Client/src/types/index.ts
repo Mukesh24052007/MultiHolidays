@@ -5,6 +5,25 @@ export type NavItem = {
   activeIcon?: string;
 };
 
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  studentId: string;
+  course: string;
+  year: number | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type UpdateProfilePayload = {
+  name?: string;
+  studentId?: string;
+  course?: string;
+  year?: number;
+};
+
 export type AttendanceStat = {
   label: string;
   value: string | number;
@@ -38,7 +57,7 @@ export type ProfileField = {
   editable?: boolean;
 };
 
-export type CalendarDayStatus = 'present' | 'absent' | 'leave' | 'today' | 'weekend' | 'holiday' | 'unmarked' | 'empty' | 'upcoming';
+export type CalendarDayStatus = 'present' | 'absent' | 'leave' | 'today' | 'weekend' | 'holiday' | 'unmarked' | 'empty' | 'upcoming' | 'leave-selected';
 
 export type CalendarDay = {
   day: number | null;

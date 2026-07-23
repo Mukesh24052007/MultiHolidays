@@ -16,11 +16,7 @@ import AttendanceSection from '@/components/dashboard/AttendanceSection';
 import AttendanceStats from '@/components/dashboard/AttendanceStats';
 import MobileAttendanceStats from '@/components/dashboard/MobileAttendanceStats';
 
-const USER_AVATAR =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuBbxpfzYth4wBFaB9fb6Z16bOBf7uU7AClergHGW9X1IfwWIyNv7EMgUvg5Grgqkfh8zwdt5C_D5_l5p4UkiF3iYSJdOKb2vHGhNq-Xrj_SykfWdAAjZbuT9ki2bt0d5mkz3ntu4KbdgLXidy3p9T2srCAAKe29BZTjRhvllY9GfwPSnny8dHt5x0yNW2vBnMcqpP7F1dymE_ivr_nhckGn80Pr1fYhMDGwKpayN5x4nfcVgsXj9Vy6nQ';
 
-const MOBILE_AVATAR =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCIrlEly0VXXD7mApSAT2VUYRTsh10fKgky2OQkPkH8IG4mT9OyQFIoa9-T1ldxvqeuIkwZOaPOZhAOOC2pORG_RhbQQk4ECuGRdztXYVOclW7vVr1YvNgwayx8XENCNZrzAQhcZkSxv5y2N7lFxzKrI4LikUF__rI7LGsXfXYjH4E2sBt_yNmQpcB7P9Q9hG2WGp9Q4devRV-RXerhLVwcyUpFj1k_WzVhHyVsQCMMcIfqPHPQ2EM8pA';
 
 export const metadata: Metadata = {
   title: 'Dashboard — MultiHolidays',
@@ -53,14 +49,24 @@ async function getAuthenticatedUser() {
   }
 }
 
+/** Extract a first name from a full name or email prefix. */
+function firstName(name: string, email: string): string {
+  if (name) return name.split(' ')[0];
+  const base = email.split('@')[0].split('.')[0];
+  return base.charAt(0).toUpperCase() + base.slice(1);
+}
+
 export default async function DashboardPage() {
   const user = await getAuthenticatedUser();
   if (!user) redirect('/');
+
+  const first = firstName(user.name, user.email);
+  const displayName = `Hello, ${first}`;
   return (
     <div className="w-full min-h-screen">
       {/* ── Mobile ── */}
       <div className="block md:hidden text-on-background min-h-screen pb-24">
-        <MobileHeader userAvatar={MOBILE_AVATAR} userName="Alex" />
+        <MobileHeader userName={first} />
 
         <main className="pt-20 px-sm space-y-md">
           {/* Attendance status banner + popup — inside main so it clears the fixed header */}
@@ -70,7 +76,7 @@ export default async function DashboardPage() {
           <section className="relative overflow-hidden rounded-xl bg-primary-container p-md text-on-primary-container">
             <div className="relative z-10">
               <p className="font-label-sm text-label-sm uppercase tracking-wider opacity-80 mb-base">Dashboard Overview</p>
-              <h1 className="font-headline-lg text-headline-lg mb-xs">Welcome back, Alex</h1>
+              <h1 className="font-headline-lg text-headline-lg mb-xs">Welcome back, {first}</h1>
               <p className="font-body-md text-body-md opacity-90 max-w-[80%]">
                 You&apos;re on track! Your attendance is currently above the 75% threshold.
               </p>
@@ -150,10 +156,10 @@ export default async function DashboardPage() {
       {/* ── Desktop ── */}
       <div className="hidden md:block font-body-md text-on-surface">
         <Sidebar activeHref="/dashboard" />
-        <TopBar title="Your Dashboard" userName="Hello, Natasha" userAvatar={USER_AVATAR} />
+        <TopBar title="Your Dashboard" userName={displayName} />
 
         <main className="ml-[280px] pt-24 px-lg min-h-screen">
-          <WelcomeBanner name="Natasha" />
+          <WelcomeBanner name={first} />
 
           {/* Attendance status banner + popup */}
           <AttendanceSection />

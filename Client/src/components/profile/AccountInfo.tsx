@@ -4,6 +4,8 @@ type Field = {
   label: string;
   value: string;
   locked?: boolean;
+  /** Icon name override — defaults to lock/edit based on the `locked` flag */
+  icon?: string;
 };
 
 type Props = {
@@ -13,15 +15,21 @@ type Props = {
 export default function AccountInfo({ fields }: Props) {
   return (
     <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md space-y-md">
-      <h3 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Account Information</h3>
+      <h3 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">
+        Account Information
+      </h3>
       <div className="space-y-sm">
         {fields.map((field) => (
           <div key={field.label} className="group">
-            <label className="text-label-sm font-label-sm text-outline mb-1 block">{field.label}</label>
+            <label className="text-label-sm font-label-sm text-outline mb-1 block">
+              {field.label}
+            </label>
             <div className="flex items-center justify-between p-sm bg-surface-container rounded-lg border border-transparent group-hover:border-primary/20 transition-all">
-              <span className="text-body-md font-body-md text-on-surface">{field.value}</span>
+              <span className="text-body-md font-body-md text-on-surface">
+                {field.value || <span className="text-outline italic">Not set</span>}
+              </span>
               <Icon
-                name={field.locked ? 'lock' : 'edit'}
+                name={field.icon ?? (field.locked ? 'lock' : 'edit')}
                 className="text-outline text-[18px]"
               />
             </div>
