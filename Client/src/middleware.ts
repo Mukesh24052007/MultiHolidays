@@ -7,7 +7,10 @@ import { NextRequest, NextResponse } from 'next/server';
  *  - Protected routes (/dashboard, /leave-calendar, /profile):
  *      No "token" cookie → redirect to /
  *  - Login route (/):
- *      Has "token" cookie → redirect to /dashboard (skip the login page)
+ *      Has "token" cookie → let the page render (do NOT redirect to /dashboard).
+ *      The page itself will redirect after validating the token with the API.
+ *      Redirecting here would create an infinite loop if the token is expired
+ *      (dashboard → 307 / → middleware → 307 /dashboard → repeat).
  *
  * Note: we only check for the cookie's presence here (fast, zero network round-trip).
  * The real validation happens server-side when each page calls GET /api/auth/me.
@@ -15,7 +18,6 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 
 const PROTECTED = ['/dashboard', '/leave-calendar', '/profile'];
-const AUTH_PAGE = '/';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -24,12 +26,7 @@ export function middleware(request: NextRequest) {
   // Redirect unauthenticated users away from protected pages
   const isProtected = PROTECTED.some((path) => pathname.startsWith(path));
   if (isProtected && !token) {
-    return NextResponse.redirect(new URL(AUTH_PAGE, request.url));
-  }
-
-  // Redirect already-authenticated users away from the login page
-  if (pathname === AUTH_PAGE && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();

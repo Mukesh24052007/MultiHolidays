@@ -11,31 +11,30 @@ interface AuthResponse {
   success: boolean;
   message: string;
   token?: string;
-  admin: Admin;
+  // Server returns the payload under "user" (not "admin")
+  user: Admin;
 }
 
 /**
  * POST /api/auth/login
  *
  * Submits email + password credentials. On success the server sets an
- * httpOnly "token" cookie (7-day expiry) and returns the admin payload.
- * This is a one-time, user-initiated action.
+ * httpOnly "token" cookie (7-day expiry) and returns the user payload.
  */
 export async function loginUser(email: string, password: string): Promise<Admin> {
   const { data } = await api.post<AuthResponse>('/auth/login', { email, password });
-  return data.admin;
+  return data.user;
 }
 
 /**
  * GET /api/auth/me
  *
- * Silently re-authenticates the user using the existing httpOnly cookie.
- * Call this on app load: if it resolves the user is still logged in, if it
- * throws (401) redirect them to the login page.
+ * Silently re-authenticates using the existing httpOnly cookie.
+ * Throws an AxiosError (401) if the session has expired.
  */
 export async function getMe(): Promise<Admin> {
   const { data } = await api.get<AuthResponse>('/auth/me');
-  return data.admin;
+  return data.user;
 }
 
 /**

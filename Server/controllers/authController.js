@@ -1,4 +1,4 @@
-import Admin from "../models/Admin.js";
+import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 
 const extractName = (email) => email.split("@")[0].split(".")[0];
@@ -7,7 +7,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms, mirrors JWT_EXPIRES_IN
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
 };
 
 export const login = async (req, res) => {
@@ -21,12 +21,12 @@ export const login = async (req, res) => {
 
   try {
     // Check whether this email is already registered
-    const existingAdmin = await Admin.findOne({ email }).select("+password");
+    const existingUser = await User.findOne({ email }).select("+password");
 
-    if (!existingAdmin) {
+    if (!existingUser) {
       // ── First time: auto-register and log in ──────────────────────────────
-      const newAdmin = await Admin.create({ email, password });
-      const token = generateToken(newAdmin._id);
+      const newUser = await User.create({ email, password });
+      const token = generateToken(newUser._id);
 
       res.cookie("token", token, cookieOptions);
 
@@ -34,17 +34,17 @@ export const login = async (req, res) => {
         success: true,
         message: "Account created and logged in successfully.",
         token,
-        admin: {
-          id: newAdmin._id,
-          email: newAdmin.email,
-          name: extractName(newAdmin.email),
-          createdAt: newAdmin.createdAt,
+        user: {
+          id: newUser._id,
+          email: newUser.email,
+          name: newUser.name || extractName(newUser.email),
+          createdAt: newUser.createdAt,
         },
       });
     }
 
-    // ── Returning admin: verify password ─────────────────────────────────────
-    const isMatch = await existingAdmin.matchPassword(password);
+    // ── Returning user: verify password ───────────────────────────────────────
+    const isMatch = await existingUser.matchPassword(password);
 
     if (!isMatch) {
       return res
@@ -52,7 +52,7 @@ export const login = async (req, res) => {
         .json({ success: false, message: "Invalid credentials." });
     }
 
-    const token = generateToken(existingAdmin._id);
+    const token = generateToken(existingUser._id);
 
     res.cookie("token", token, cookieOptions);
 
@@ -60,11 +60,11 @@ export const login = async (req, res) => {
       success: true,
       message: "Logged in successfully.",
       token,
-      admin: {
-        id: existingAdmin._id,
-        email: existingAdmin.email,
-        name: extractName(existingAdmin.email),
-        createdAt: existingAdmin.createdAt,
+      user: {
+        id: existingUser._id,
+        email: existingUser.email,
+        name: existingUser.name || extractName(existingUser.email),
+        createdAt: existingUser.createdAt,
       },
     });
   } catch (error) {
@@ -76,19 +76,19 @@ export const login = async (req, res) => {
 };
 
 export const getMe = async (req, res) => {
-  // req.admin is attached by the protect middleware
+  // req.user is attached by the protect middleware
   res.status(200).json({
     success: true,
-    admin: {
-      id: req.admin._id,
-      email: req.admin.email,
-      name: extractName(req.admin.email),
-      createdAt: req.admin.createdAt,
+    user: {
+      id: req.user._id,
+      email: req.user.email,
+      name: req.user.name || extractName(req.user.email),
+      createdAt: req.user.createdAt,
     },
   });
 };
 
-export const logout = (req, res) => {
+export const logout = (_req, res) => {
   res.clearCookie("token", cookieOptions);
   res.status(200).json({ success: true, message: "Logged out successfully." });
 };

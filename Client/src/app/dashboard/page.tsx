@@ -13,6 +13,7 @@ import DisclaimerNote from '@/components/dashboard/DisclaimerNote';
 import AttendanceRecordList from '@/components/dashboard/AttendanceRecord';
 import ImageGrid from '@/components/dashboard/ImageGrid';
 import { ATTENDANCE_STATS, RECENT_ATTENDANCE, ANNOUNCEMENTS, DASHBOARD_IMAGES } from '@/constants/dashboard';
+import AttendanceSection from '@/components/dashboard/AttendanceSection';
 
 const USER_AVATAR =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBbxpfzYth4wBFaB9fb6Z16bOBf7uU7AClergHGW9X1IfwWIyNv7EMgUvg5Grgqkfh8zwdt5C_D5_l5p4UkiF3iYSJdOKb2vHGhNq-Xrj_SykfWdAAjZbuT9ki2bt0d5mkz3ntu4KbdgLXidy3p9T2srCAAKe29BZTjRhvllY9GfwPSnny8dHt5x0yNW2vBnMcqpP7F1dymE_ivr_nhckGn80Pr1fYhMDGwKpayN5x4nfcVgsXj9Vy6nQ';
@@ -29,8 +30,10 @@ export const metadata: Metadata = {
  * Silently verify the session server-side before rendering.
  * Calls GET /api/auth/me with the cookie forwarded from the browser.
  * If the token is missing or expired the server returns 401 and we redirect.
+ *
+ * NOTE: The server returns { user: { id, email, name } } — NOT { admin: ... }.
  */
-async function getAuthenticatedAdmin() {
+async function getAuthenticatedUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
   if (!token) return null;
@@ -42,15 +45,16 @@ async function getAuthenticatedAdmin() {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return data.admin as { id: string; email: string; name: string };
+    // Server sends { success, user: { id, email, name } }
+    return (data.user ?? data.admin) as { id: string; email: string; name: string } | null;
   } catch {
     return null;
   }
 }
 
 export default async function DashboardPage() {
-  const admin = await getAuthenticatedAdmin();
-  if (!admin) redirect('/');
+  const user = await getAuthenticatedUser();
+  if (!user) redirect('/');
   return (
     <div className="w-full min-h-screen">
       {/* ── Mobile ── */}
@@ -58,6 +62,9 @@ export default async function DashboardPage() {
         <MobileHeader userAvatar={MOBILE_AVATAR} userName="Alex" />
 
         <main className="pt-20 px-sm space-y-md">
+          {/* Attendance status banner + popup — inside main so it clears the fixed header */}
+          <AttendanceSection />
+
           {/* Mobile welcome */}
           <section className="relative overflow-hidden rounded-xl bg-primary-container p-md text-on-primary-container">
             <div className="relative z-10">
@@ -157,10 +164,6 @@ export default async function DashboardPage() {
 
         <BottomNav activeHref="/dashboard" />
 
-        <button className="fixed bottom-24 right-sm bg-primary text-on-primary w-14 h-14 rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-all z-40">
-          <Icon name="add" size="lg" />
-        </button>
-
         <footer className="mt-xl px-lg py-md text-center border-t border-outline-variant bg-surface">
           <p className="font-label-sm text-label-sm text-secondary">© 2024 MultiHolidays. All rights reserved.</p>
           <div className="flex justify-center gap-md mt-sm">
@@ -177,6 +180,9 @@ export default async function DashboardPage() {
 
         <main className="ml-[280px] pt-24 px-lg min-h-screen">
           <WelcomeBanner name="Natasha" />
+
+          {/* Attendance status banner + popup */}
+          <AttendanceSection />
 
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md mb-xl">
             {ATTENDANCE_STATS.map((stat) => (
