@@ -11,7 +11,7 @@ export default function Footer({ offsetLeft = false }: FooterProps) {
     >
       <div className="flex flex-col">
         <span className="text-label-md font-label-md font-bold text-on-surface">MultiHolidays</span>
-        <p className="text-label-sm font-label-sm text-secondary">© 2024 MultiHolidays. All rights reserved.</p>
+        <p className="text-label-sm font-label-sm text-secondary">© 2026 MultiHolidays. All rights reserved.</p>
       </div>
       <div className="flex items-center gap-lg">
         <a href="#" className="text-label-sm font-label-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all">

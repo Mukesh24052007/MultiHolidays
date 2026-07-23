@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
-import { NAV_ITEMS, NAV_FOOTER_ITEMS } from '@/constants/nav';
+import LogoutButton from '@/components/layout/LogoutButton';
+import { NAV_ITEMS } from '@/constants/nav';
 
 type SidebarProps = {
   activeHref: string;
@@ -35,19 +36,32 @@ export default function Sidebar({ activeHref }: SidebarProps) {
       </nav>
 
       <div className="mt-auto space-y-base border-t border-outline-variant pt-md">
-        <button className="w-full mb-md bg-primary text-on-primary py-2.5 rounded-lg font-label-md font-bold hover:opacity-90 active:scale-95 transition-all">
+        {/* Quick link to the leave calendar */}
+        <Link
+          href="/leave-calendar"
+          className="w-full mb-md bg-primary text-on-primary py-2.5 rounded-lg font-label-md font-bold hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-xs"
+        >
+          <Icon name="event_available" filled className="text-[18px]" />
           Apply for Leave
-        </button>
-        {NAV_FOOTER_ITEMS.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors duration-200 font-label-md text-label-md"
-          >
-            <Icon name={item.icon} />
-            <span>{item.label}</span>
-          </Link>
-        ))}
+        </Link>
+
+        <Link
+          href="#"
+          className="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors duration-200 font-label-md text-label-md"
+        >
+          <Icon name="settings" />
+          <span>Settings</span>
+        </Link>
+
+        <Link
+          href="#"
+          className="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors duration-200 font-label-md text-label-md"
+        >
+          <Icon name="help" />
+          <span>Help</span>
+        </Link>
+
+        <LogoutButton />
       </div>
     </aside>
   );

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
+import LogoutButton from '@/components/layout/LogoutButton';
 
 type TopBarProps = {
   title: string;
@@ -10,7 +11,6 @@ type TopBarProps = {
 
 /** Derive up to 2 initials from a display name or "Hello, Name" string. */
 function getInitials(name: string): string {
-  // Strip leading "Hello, " if present
   const cleaned = name.replace(/^hello,\s*/i, '').trim();
   const parts = cleaned.split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
@@ -25,14 +25,17 @@ export default function TopBar({ title, userName, userAvatar }: TopBarProps) {
     <header className="fixed top-0 right-0 left-[280px] h-16 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-lg z-40">
       <h2 className="text-headline-md font-headline-md text-on-surface">{title}</h2>
 
-      <div className="flex items-center gap-md">
-        {/* Notification bell */}
+      <div className="flex items-center gap-xs">
+        {/* Notification bell — placeholder */}
         <button
-          className="hover:bg-surface-container-low rounded-full p-2 transition-opacity active:opacity-80"
+          className="hover:bg-surface-container-low rounded-full p-2 transition-colors active:opacity-80"
           aria-label="Notifications"
         >
           <Icon name="notifications" className="text-on-surface-variant" />
         </button>
+
+        {/* Sign out */}
+        <LogoutButton variant="icon" />
 
         {/* Avatar chip — links to profile */}
         <Link

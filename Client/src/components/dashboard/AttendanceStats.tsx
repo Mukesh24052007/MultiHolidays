@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { getMe } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
 import { getAttendancePercentage } from '@/lib/attendance';
 import type { AttendancePercentageResponse } from '@/lib/attendance';
 import StatCard from './StatCard';
@@ -84,20 +84,18 @@ function SkeletonCards() {
 }
 
 export default function AttendanceStats() {
-  const [state, setState]   = useState<LoadState>('loading');
-  const [stats, setStats]   = useState<AttendanceStat[]>([]);
+  const { user, loading: authLoading } = useAuth();
+  const [state, setState] = useState<LoadState>('loading');
+  const [stats, setStats] = useState<AttendanceStat[]>([]);
 
   useEffect(() => {
+    if (authLoading || !user) return;
     let cancelled = false;
 
     (async () => {
       try {
-        const user = await getMe();
-        if (cancelled) return;
-
         const data = await getAttendancePercentage(user.id);
         if (cancelled) return;
-
         setStats(buildStats(data));
         setState('success');
       } catch {
@@ -106,7 +104,7 @@ export default function AttendanceStats() {
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [user, authLoading]);
 
   if (state === 'loading') {
     return (
@@ -119,7 +117,6 @@ export default function AttendanceStats() {
   if (state === 'error') {
     return (
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md mb-xl">
-        {/* Show stat cards with an error note in the first card */}
         <div className="col-span-full text-center text-label-md text-error py-sm">
           Could not load attendance data. Please refresh the page.
         </div>

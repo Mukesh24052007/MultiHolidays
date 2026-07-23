@@ -4,12 +4,11 @@
  * MobileAttendanceStats
  *
  * Mobile-layout version of the attendance metrics.
- * Fetches live data from GET /api/attendance/user/:userId/percentage
- * and renders the circular progress ring, present/absent tiles.
+ * Uses AuthContext (single /auth/me call) then fetches live % data.
  */
 
 import { useEffect, useState } from 'react';
-import { getMe } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
 import { getAttendancePercentage } from '@/lib/attendance';
 import type { AttendancePercentageResponse } from '@/lib/attendance';
 import Icon from '@/components/ui/Icon';
@@ -24,20 +23,18 @@ function pctToOffset(pct: number) {
 }
 
 export default function MobileAttendanceStats() {
+  const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState<LoadState>('loading');
-  const [data, setData]   = useState<AttendancePercentageResponse | null>(null);
+  const [data, setData] = useState<AttendancePercentageResponse | null>(null);
 
   useEffect(() => {
+    if (authLoading || !user) return;
     let cancelled = false;
 
     (async () => {
       try {
-        const user = await getMe();
-        if (cancelled) return;
-
         const result = await getAttendancePercentage(user.id);
         if (cancelled) return;
-
         setData(result);
         setState('success');
       } catch {
@@ -46,7 +43,7 @@ export default function MobileAttendanceStats() {
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [user, authLoading]);
 
   /* ── Loading skeleton ───────────────────────────────────────────── */
   if (state === 'loading') {

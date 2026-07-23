@@ -13,13 +13,10 @@ import LeaveTracker from '@/components/calendar/LeaveTracker';
 import LeaveSummaryCards from '@/components/calendar/LeaveSummaryCards';
 import LeavePredictionCard from '@/components/calendar/LeavePredictionCard';
 import { SEMESTER_MONTHS, WEEKDAY_HEADERS_SHORT, buildMonthsFromRecords } from '@/constants/calendar';
-import { getMe } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
 import { getUserAttendance, markAttendance, getAttendancePercentage, getLeaveRequests } from '@/lib/attendance';
 import type { AttendanceStatus, AttendancePercentageResponse } from '@/lib/attendance';
 import type { CalendarDay } from '@/types';
-
-const USER_AVATAR = '';
-const MOBILE_AVATAR = '';
 
 type MonthEntry = typeof SEMESTER_MONTHS[number];
 
@@ -134,10 +131,9 @@ function MarkModal({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function CalendarPage() {
+  const { user, loading: authLoading } = useAuth();
   const [monthIndex, setMonthIndex]   = useState(0);
   const [months, setMonths]           = useState<MonthEntry[]>(SEMESTER_MONTHS);
-  const [userId, setUserId]           = useState<string | null>(null);
-  const [userName, setUserName]       = useState<string>('');
   const [loadingData, setLoadingData] = useState(true);
   const [pctData, setPctData]         = useState<AttendancePercentageResponse | null>(null);
 
@@ -151,19 +147,17 @@ export default function CalendarPage() {
   const [showLeaveModal, setShowLeaveModal]         = useState(false);
   const [leaveRefreshKey, setLeaveRefreshKey]       = useState(0);
 
+  // Derive display name from auth context
+  const userName = user
+    ? (user.name ? user.name.split(' ')[0] : user.email.split('@')[0].split('.')[0].replace(/^./, c => c.toUpperCase()))
+    : '';
+
   // ── Data fetch ────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (authLoading || !user) return;
     let cancelled = false;
     (async () => {
       try {
-        const user = await getMe();
-        if (cancelled) return;
-        setUserId(user.id);
-        // Derive a friendly first name for the header
-        const first = user.name
-          ? user.name.split(' ')[0]
-          : user.email.split('@')[0].split('.')[0].replace(/^./, c => c.toUpperCase());
-        setUserName(first);
         const [res, pct, leaveRes] = await Promise.all([
           getUserAttendance(user.id),
           getAttendancePercentage(user.id),
@@ -209,7 +203,7 @@ export default function CalendarPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [user, authLoading]);
 
   // ── Leave-mode helpers ────────────────────────────────────────────────────
   function enterLeaveSelectMode() {
@@ -291,15 +285,15 @@ export default function CalendarPage() {
   return (
     <div className="w-full min-h-screen">
       {/* Mark/Edit modal */}
-      {modalDate && userId && !leaveSelectMode && (
-        <MarkModal date={modalDate} userId={userId} currentStatus={modalStatus}
+      {modalDate && user?.id && !leaveSelectMode && (
+        <MarkModal date={modalDate} userId={user.id} currentStatus={modalStatus}
           onMarked={handleMarked} onClose={() => setModalDate(null)} />
       )}
 
       {/* Leave check modal */}
-      {showLeaveModal && userId && (
+      {showLeaveModal && user?.id && (
         <LeaveCheckModal
-          userId={userId}
+          userId={user.id}
           selectedDates={sortedLeaveDates}
           onClose={() => setShowLeaveModal(false)}
           onSaved={handleLeaveSaved}
@@ -455,7 +449,7 @@ export default function CalendarPage() {
               absentDays={pctData?.summary.absentDays ?? 0}
               loading={loadingData}
             />
-            <LeaveTracker userId={userId ?? ''} refreshKey={leaveRefreshKey} />
+            <LeaveTracker userId={user?.id ?? ''} refreshKey={leaveRefreshKey} />
           </div>
         </main>
         <BottomNav activeHref="/leave-calendar" />
@@ -600,7 +594,7 @@ export default function CalendarPage() {
                   loading={loadingData}
                 />
 
-                <LeaveTracker userId={userId ?? ''} refreshKey={leaveRefreshKey} />
+                <LeaveTracker userId={user?.id ?? ''} refreshKey={leaveRefreshKey} />
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-# Logs
+# ── Logs ──────────────────────────────────────────────────────────────────────
 logs
 *.log
 npm-debug.log*
@@ -7,20 +7,41 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ── Dependencies ───────────────────────────────────────────────────────────────
+node_modules/
+Client/node_modules/
 
+# ── Build output ───────────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+Client/.next/
+Client/out/
+Client/build/
+
+# ── Environment — real secrets NEVER go to git ────────────────────────────────
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+Client/.env.local
+Client/.env.development.local
+Client/.env.test.local
+Client/.env.production.local
+# NOTE: Client/.env.production is safe to commit (only has placeholder URLs)
 
-# Editor directories and files
+# ── Editor ────────────────────────────────────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.local
+*.pem
+.vercel
