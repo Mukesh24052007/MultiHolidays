@@ -7,7 +7,7 @@ const router = Router();
 // POST /api/auth/login   — auto-registers on first use, signs in on subsequent calls
 router.post("/login", login);
 
-// GET  /api/auth/me      — returns current admin info (requires valid JWT)
+// GET  /api/auth/me      — returns current user info (requires valid JWT)
 router.get("/me", protect, getMe);
 
 // POST /api/auth/logout  — clears the auth cookie
