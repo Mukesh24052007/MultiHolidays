@@ -18,8 +18,8 @@ import { getUserAttendance, markAttendance, getAttendancePercentage, getLeaveReq
 import type { AttendanceStatus, AttendancePercentageResponse } from '@/lib/attendance';
 import type { CalendarDay } from '@/types';
 
-const USER_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDx7kbb9ys2eQvwxAU3cM-cn7Wkqdr3T4wGW1DisZUK9eILShpHUBKSg0AAkMvX6jLLHb-24h4lJUKyoo-nGtkJB9XZZ5GfW9KlyhpXEus2vIIDVzmdBM3aViljDASjhdYxoFqzZPr8BeF6I3unxUEJNFgKfJOddbCOJLNB4SDcYX1e5wgGjB_RV7U4BZXYEVQBolIZERIXSKPedMJMVzJerAfTGSkD8W-8soMD2__WBDEsRryjNz8ehQ';
-const MOBILE_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBwwHgDkQRyuvDQwxr7hfQTdodp_g4R3LZ0j4cl1WPgCux9Qa1xX_hMDR4g9N41MtSzu5nAj0uWgmFk-s1CQUVI9wnT_ygqWxPs05yXqLbGjghVbYAkyyXf0HSJg8RyS1EyhOyqBsTjXwQdtHafY_sAmJm1F-CRMyIofG5Q4bidYkPxsa7SDoDhngL9ShrkgJAOa7plx47sbsxVQONPGWrmNxckCT5IkdOSJZCw4CrbOix85HJ3HT2N2g';
+const USER_AVATAR = '';
+const MOBILE_AVATAR = '';
 
 type MonthEntry = typeof SEMESTER_MONTHS[number];
 
@@ -137,6 +137,7 @@ export default function CalendarPage() {
   const [monthIndex, setMonthIndex]   = useState(0);
   const [months, setMonths]           = useState<MonthEntry[]>(SEMESTER_MONTHS);
   const [userId, setUserId]           = useState<string | null>(null);
+  const [userName, setUserName]       = useState<string>('');
   const [loadingData, setLoadingData] = useState(true);
   const [pctData, setPctData]         = useState<AttendancePercentageResponse | null>(null);
 
@@ -158,6 +159,11 @@ export default function CalendarPage() {
         const user = await getMe();
         if (cancelled) return;
         setUserId(user.id);
+        // Derive a friendly first name for the header
+        const first = user.name
+          ? user.name.split(' ')[0]
+          : user.email.split('@')[0].split('.')[0].replace(/^./, c => c.toUpperCase());
+        setUserName(first);
         const [res, pct, leaveRes] = await Promise.all([
           getUserAttendance(user.id),
           getAttendancePercentage(user.id),
@@ -302,7 +308,7 @@ export default function CalendarPage() {
 
       {/* ══ MOBILE ══ */}
       <div className="block md:hidden bg-background text-on-surface">
-        <MobileHeader userAvatar={MOBILE_AVATAR} userName="Alex" />
+        <MobileHeader userName={userName} />
         <main className="pt-20 pb-24 px-4 min-h-screen">
           <div className="max-w-[448px] mx-auto space-y-4">
 
@@ -458,7 +464,7 @@ export default function CalendarPage() {
       {/* ══ DESKTOP ══ */}
       <div className="hidden md:block bg-surface">
         <Sidebar activeHref="/leave-calendar" />
-        <TopBar title="Leave Calendar" userName="Alex Chen" userAvatar={USER_AVATAR} />
+        <TopBar title="Leave Calendar" userName={userName ? `Hello, ${userName}` : 'Leave Calendar'} />
 
         <main className="ml-[280px] mt-16 p-8 pb-16 min-h-[calc(100vh-64px)]">
           <div className="max-w-[1280px] mx-auto">

@@ -7,6 +7,7 @@ import connectDB from "./utils/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import leaveRoutes from "./routes/leaveRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ if (process.env.NODE_ENV !== "production") {
 app.use("/api/auth", authRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leave", leaveRoutes);
+app.use("/api/profile", profileRoutes);
 
 // ── Start server ──────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
