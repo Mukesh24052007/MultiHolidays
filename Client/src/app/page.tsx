@@ -1,16 +1,26 @@
-import type { Metadata } from 'next';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import LoginBranding from '@/components/login/LoginBranding';
 import LoginForm from '@/components/login/LoginForm';
 import LoginSidePanel from '@/components/login/LoginSidePanel';
 import TrustBadges from '@/components/login/TrustBadges';
-
-export const metadata: Metadata = {
-  title: 'Login — MultiHolidays',
-  description: 'Sign in to the MultiHolidays student portal.',
-};
+import { getMe } from '@/lib/auth';
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // If a valid session cookie already exists, skip the login page entirely.
+    getMe()
+      .then(() => router.replace('/dashboard'))
+      .catch(() => {
+        // No valid session — stay on the login page.
+      });
+  }, [router]);
+
   return (
     <div className="w-full min-h-screen">
       {/* ── Mobile ── */}
