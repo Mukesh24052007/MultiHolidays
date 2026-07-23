@@ -11,21 +11,16 @@ import CalendarGrid from '@/components/calendar/CalendarGrid';
 import LeaveForm from '@/components/calendar/LeaveForm';
 import LeaveSummaryCards from '@/components/calendar/LeaveSummaryCards';
 import LeavePredictionCard from '@/components/calendar/LeavePredictionCard';
-import { SEMESTER_MONTHS, WEEKDAY_HEADERS_SHORT, buildMonthsFromRecords } from '@/constants/calendar';
+import { SEMESTER_MONTHS, WEEKDAY_HEADERS_SHORT, buildMonthsFromRecords, getTodayIso } from '@/constants/calendar';
 import { getMe } from '@/lib/auth';
-import { getUserAttendance, markAttendance } from '@/lib/attendance';
-import type { AttendanceStatus } from '@/lib/attendance';
+import { getUserAttendance, markAttendance, getAttendancePercentage } from '@/lib/attendance';
+import type { AttendanceStatus, AttendancePercentageResponse } from '@/lib/attendance';
 import type { CalendarDay } from '@/types';
 
 const USER_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDx7kbb9ys2eQvwxAU3cM-cn7Wkqdr3T4wGW1DisZUK9eILShpHUBKSg0AAkMvX6jLLHb-24h4lJUKyoo-nGtkJB9XZZ5GfW9KlyhpXEus2vIIDVzmdBM3aViljDASjhdYxoFqzZPr8BeF6I3unxUEJNFgKfJOddbCOJLNB4SDcYX1e5wgGjB_RV7U4BZXYEVQBolIZERIXSKPedMJMVzJerAfTGSkD8W-8soMD2__WBDEsRryjNz8ehQ';
 const MOBILE_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBwwHgDkQRyuvDQwxr7hfQTdodp_g4R3LZ0j4cl1WPgCux9Qa1xX_hMDR4g9N41MtSzu5nAj0uWgmFk-s1CQUVI9wnT_ygqWxPs05yXqLbGjghVbYAkyyXf0HSJg8RyS1EyhOyqBsTjXwQdtHafY_sAmJm1F-CRMyIofG5Q4bidYkPxsa7SDoDhngL9ShrkgJAOa7plx47sbsxVQONPGWrmNxckCT5IkdOSJZCw4CrbOix85HJ3HT2N2g';
 
 type MonthEntry = typeof SEMESTER_MONTHS[number];
-
-function getTodayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 function formatIsoForDisplay(iso: string) {
   const [y, m, d] = iso.split('-');
@@ -156,11 +151,12 @@ export default function CalendarPage() {
   const [months, setMonths]           = useState<MonthEntry[]>(SEMESTER_MONTHS);
   const [userId, setUserId]           = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [pctData, setPctData]         = useState<AttendancePercentageResponse | null>(null);
   // Modal state: which date was clicked + its current status
   const [modalDate, setModalDate]     = useState<string | null>(null);
   const [modalStatus, setModalStatus] = useState<CalendarDay['status']>('unmarked');
 
-  // ── Fetch all attendance records once on mount ─────────────────────────────
+  // ── Fetch attendance records + percentage once on mount ────────────────────
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -168,11 +164,17 @@ export default function CalendarPage() {
         const user = await getMe();
         if (cancelled) return;
         setUserId(user.id);
-        const res = await getUserAttendance(user.id);
+
+        // Run both fetches in parallel
+        const [res, pct] = await Promise.all([
+          getUserAttendance(user.id),
+          getAttendancePercentage(user.id),
+        ]);
         if (cancelled) return;
         setMonths(buildMonthsFromRecords(res.records));
+        setPctData(pct);
       } catch {
-        // silently fallback to static months
+        // silently fallback to static months / no percentage
       } finally {
         if (!cancelled) setLoadingData(false);
       }
@@ -195,10 +197,7 @@ export default function CalendarPage() {
   }
 
   function handleDayClick(iso: string, status: CalendarDay['status']) {
-    // Allow marking/editing any past day that isn't a holiday or upcoming
     if (status === 'holiday' || status === 'empty' || status === 'upcoming') return;
-    // Don't open modal for today — use the dashboard popup instead
-    if (iso === getTodayKey()) return;
     setModalStatus(status);
     setModalDate(iso);
   }
@@ -230,6 +229,15 @@ export default function CalendarPage() {
         <MobileHeader userAvatar={MOBILE_AVATAR} userName="Alex" />
         <main className="pt-20 pb-24 px-4 min-h-screen">
           <div className="max-w-[448px] mx-auto space-y-4">
+
+            {/* ── Check Leave — highest-priority CTA (mobile) ── */}
+            <button
+              className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-3.5 rounded-2xl font-bold text-base shadow-md hover:bg-on-primary-fixed-variant active:scale-[0.98] transition-all duration-150 animate-fade-in"
+              aria-label="Check Leave"
+            >
+              <Icon name="event_available" filled className="text-[20px]" />
+              Check Leave
+            </button>
 
             <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 animate-fade-in">
               {/* Month nav */}
@@ -314,8 +322,17 @@ export default function CalendarPage() {
             </div>
 
             <LeaveForm />
-            <LeaveSummaryCards />
-            <LeavePredictionCard />
+            <LeaveSummaryCards
+              percentage={pctData?.percentage ?? 0}
+              presentDays={pctData?.summary.presentDays ?? 0}
+              totalWorkingDays={pctData?.summary.totalWorkingDays ?? 0}
+              loading={loadingData}
+            />
+            <LeavePredictionCard
+              percentage={pctData?.percentage ?? 0}
+              absentDays={pctData?.summary.absentDays ?? 0}
+              loading={loadingData}
+            />
           </div>
         </main>
         <BottomNav activeHref="/leave-calendar" />
@@ -348,7 +365,10 @@ export default function CalendarPage() {
                   <input type="number" placeholder="Days of leave needed…"
                     className="pl-10 pr-4 py-2 bg-transparent border-none focus:ring-0 text-body-md w-full md:w-56 placeholder:text-outline" />
                 </div>
-                <button className="bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-sm hover:bg-on-primary-fixed-variant transition-colors">Check</button>
+                <button className="flex items-center gap-1.5 bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold text-sm shadow hover:bg-on-primary-fixed-variant active:scale-[0.97] transition-all duration-150">
+                  <Icon name="event_available" filled className="text-[16px]" />
+                  Check Leave
+                </button>
               </div>
             </div>
 
@@ -405,8 +425,17 @@ export default function CalendarPage() {
                   </div>
                 </div>
 
-                <LeaveSummaryCards />
-                <LeavePredictionCard />
+                <LeaveSummaryCards
+                  percentage={pctData?.percentage ?? 0}
+                  presentDays={pctData?.summary.presentDays ?? 0}
+                  totalWorkingDays={pctData?.summary.totalWorkingDays ?? 0}
+                  loading={loadingData}
+                />
+                <LeavePredictionCard
+                  percentage={pctData?.percentage ?? 0}
+                  absentDays={pctData?.summary.absentDays ?? 0}
+                  loading={loadingData}
+                />
 
                 <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 space-y-4">
                   <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Leave Balance</h3>

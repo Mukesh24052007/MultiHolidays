@@ -6,7 +6,12 @@ const extractName = (email) => email.split("@")[0].split(".")[0];
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  // "lax" allows the cookie to be sent on cross-origin requests initiated
+  // by the browser (e.g. Next.js on :3000 calling the API on :2026).
+  // "strict" blocks all cross-origin cookie sending, which breaks the
+  // client-side getMe() call used to redirect authenticated users away
+  // from the login page.
+  sameSite: "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
 };
 

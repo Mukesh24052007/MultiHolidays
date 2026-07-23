@@ -2,7 +2,6 @@ import type { CalendarDay } from '@/types';
 
 // ─── Semester range ────────────────────────────────────────────────────────────
 // Attendance tracked : 15 Jul 2026 → 20 Nov 2026
-// Today (for demo)  : 22 Jul 2026
 //
 // Holiday rules (no attendance — blocked):
 //   • Every Sunday
@@ -13,9 +12,21 @@ import type { CalendarDay } from '@/types';
 export const SEMESTER_START = '2026-07-15';
 export const SEMESTER_END   = '2026-11-20';
 
-const TODAY_DATE = new Date(2026, 6, 22);  // 22 Jul 2026
 const START_DATE = new Date(2026, 6, 15);  // 15 Jul 2026
 const END_DATE   = new Date(2026, 10, 20); // 20 Nov 2026
+
+/** Returns today's date at midnight (local) — computed fresh each call so the
+ *  calendar always reflects the real current date. */
+function getToday(): Date {
+  const t = new Date();
+  return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+/** Returns today as "YYYY-MM-DD" using local time. */
+export function getTodayIso(): string {
+  const t = getToday();
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+}
 
 /**
  * Returns true for days with no attendance obligation:
@@ -45,6 +56,7 @@ function buildMonth(
   overrides: Map<string, CalendarDay['status']> = new Map(),
 ): CalendarDay[] {
   const firstDow = new Date(year, month - 1, 1).getDay();
+  const today    = getToday(); // fresh each call — always the real current date
   const days: CalendarDay[] = [];
 
   for (let e = 0; e < firstDow; e++) {
@@ -54,17 +66,16 @@ function buildMonth(
   for (let d = 1; d <= daysInMonth; d++) {
     const date    = new Date(year, month - 1, d);
     const dow     = date.getDay();
-    // ISO key "YYYY-MM-DD" (zero-padded) — matches server format
     const isoKey  = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
     let status: CalendarDay['status'];
 
     if (isHolidayDow(dow, d) || date < START_DATE || date > END_DATE) {
       status = 'holiday';
-    } else if (date.getTime() === TODAY_DATE.getTime()) {
-      // Check API override first (e.g. today already marked)
+    } else if (date.getTime() === today.getTime()) {
+      // Today — show API status if already marked, otherwise "today"
       status = overrides.get(isoKey) ?? 'today';
-    } else if (date > TODAY_DATE) {
+    } else if (date > today) {
       status = 'upcoming';
     } else {
       // Past working day inside semester — use API data if available

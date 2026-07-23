@@ -8,12 +8,13 @@ import BottomNav from '@/components/layout/BottomNav';
 import Footer from '@/components/layout/Footer';
 import Icon from '@/components/ui/Icon';
 import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
-import StatCard from '@/components/dashboard/StatCard';
 import DisclaimerNote from '@/components/dashboard/DisclaimerNote';
 import AttendanceRecordList from '@/components/dashboard/AttendanceRecord';
 import ImageGrid from '@/components/dashboard/ImageGrid';
-import { ATTENDANCE_STATS, RECENT_ATTENDANCE, ANNOUNCEMENTS, DASHBOARD_IMAGES } from '@/constants/dashboard';
+import { RECENT_ATTENDANCE, ANNOUNCEMENTS, DASHBOARD_IMAGES } from '@/constants/dashboard';
 import AttendanceSection from '@/components/dashboard/AttendanceSection';
+import AttendanceStats from '@/components/dashboard/AttendanceStats';
+import MobileAttendanceStats from '@/components/dashboard/MobileAttendanceStats';
 
 const USER_AVATAR =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBbxpfzYth4wBFaB9fb6Z16bOBf7uU7AClergHGW9X1IfwWIyNv7EMgUvg5Grgqkfh8zwdt5C_D5_l5p4UkiF3iYSJdOKb2vHGhNq-Xrj_SykfWdAAjZbuT9ki2bt0d5mkz3ntu4KbdgLXidy3p9T2srCAAKe29BZTjRhvllY9GfwPSnny8dHt5x0yNW2vBnMcqpP7F1dymE_ivr_nhckGn80Pr1fYhMDGwKpayN5x4nfcVgsXj9Vy6nQ';
@@ -83,44 +84,17 @@ export default async function DashboardPage() {
           {/* Mobile metrics */}
           <section className="space-y-sm">
             <h2 className="font-headline-md text-headline-md px-base">Academic Metrics</h2>
-            <div className="grid grid-cols-1 gap-sm">
-              {/* Circular attendance */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex items-center justify-between hover:translate-y-[-2px] transition-all duration-200">
-                <div>
-                  <p className="font-label-md text-label-md text-on-surface-variant">Overall Attendance</p>
-                  <h3 className="font-headline-xl text-headline-xl text-primary mt-xs">88.5%</h3>
-                </div>
-                <div className="relative flex items-center justify-center w-20 h-20">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle className="text-surface-container-high" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" strokeWidth="8" />
-                    <circle className="text-tertiary" cx="40" cy="40" fill="transparent" r="34" stroke="currentColor" strokeDasharray="213.6" strokeDashoffset="24.5" strokeWidth="8" />
-                  </svg>
-                  <Icon name="check_circle" filled className="absolute text-tertiary" />
-                </div>
+            <MobileAttendanceStats />
+            <div className="bg-secondary-container/30 border border-primary/10 rounded-xl p-md flex items-center gap-md">
+              <div className="bg-primary text-on-primary w-12 h-12 rounded-lg flex flex-col items-center justify-center shrink-0">
+                <span className="font-label-sm text-[10px] leading-none uppercase">Oct</span>
+                <span className="font-headline-md text-headline-md leading-none">24</span>
               </div>
-              <div className="grid grid-cols-2 gap-sm">
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-                  <Icon name="event_available" className="text-primary mb-xs" />
-                  <p className="font-label-sm text-label-sm text-on-surface-variant">Days Present</p>
-                  <p className="font-headline-md text-headline-md">115</p>
-                </div>
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
-                  <Icon name="event_busy" className="text-error mb-xs" />
-                  <p className="font-label-sm text-label-sm text-on-surface-variant">Days Absent</p>
-                  <p className="font-headline-md text-headline-md">12</p>
-                </div>
+              <div>
+                <p className="font-label-md text-label-md text-primary font-bold">Today&apos;s Schedule</p>
+                <p className="font-body-md text-body-md text-on-surface">3 Lectures Scheduled</p>
               </div>
-              <div className="bg-secondary-container/30 border border-primary/10 rounded-xl p-md flex items-center gap-md">
-                <div className="bg-primary text-on-primary w-12 h-12 rounded-lg flex flex-col items-center justify-center shrink-0">
-                  <span className="font-label-sm text-[10px] leading-none uppercase">Oct</span>
-                  <span className="font-headline-md text-headline-md leading-none">24</span>
-                </div>
-                <div>
-                  <p className="font-label-md text-label-md text-primary font-bold">Today&apos;s Schedule</p>
-                  <p className="font-body-md text-body-md text-on-surface">3 Lectures Scheduled</p>
-                </div>
-                <Icon name="chevron_right" className="ml-auto text-on-surface-variant" />
-              </div>
+              <Icon name="chevron_right" className="ml-auto text-on-surface-variant" />
             </div>
           </section>
 
@@ -184,11 +158,7 @@ export default async function DashboardPage() {
           {/* Attendance status banner + popup */}
           <AttendanceSection />
 
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md mb-xl">
-            {ATTENDANCE_STATS.map((stat) => (
-              <StatCard key={stat.label} {...stat} />
-            ))}
-          </section>
+          <AttendanceStats />
 
           <DisclaimerNote />
 

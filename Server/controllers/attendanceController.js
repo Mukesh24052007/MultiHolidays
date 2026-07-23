@@ -5,6 +5,7 @@ import {
   getWorkingDays,
   todayStr,
   ATTENDANCE_START_DATE,
+  calculateAttendancePercentage,
 } from "../utils/attendanceHelpers.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -419,6 +420,104 @@ export const getWorkingDaysList = async (req, res) => {
     });
   } catch (error) {
     console.error("getWorkingDaysList error:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error. Please try again." });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/attendance/user/:userId/percentage
+// Calculate the live attendance percentage for a user using the college rules:
+//   - Starts at 100%
+//   - Each absence  → -3%
+//   - Each presence → +0.5%
+//   - Clamped between 0 and 100
+//
+// Query params:
+//   upToDate  – "YYYY-MM-DD"  calculate up to this date (default: today)
+//   breakdown – "true"        include the full day-by-day log (default: false)
+// ─────────────────────────────────────────────────────────────────────────────
+export const getAttendancePercentage = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { upToDate, breakdown } = req.query;
+
+    // ── Resolve user ─────────────────────────────────────────────────────────
+    const user = await resolveUser(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Student not found." });
+    }
+
+    // ── Validate & determine end date ────────────────────────────────────────
+    const today = todayStr();
+    let endDate = upToDate || today;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+      return res.status(400).json({
+        success: false,
+        message: "upToDate must be in YYYY-MM-DD format.",
+      });
+    }
+
+    if (endDate > today) {
+      return res.status(400).json({
+        success: false,
+        message: `upToDate cannot be in the future. Today is ${today}.`,
+      });
+    }
+
+    if (endDate < ATTENDANCE_START_DATE) {
+      return res.status(400).json({
+        success: false,
+        message: `upToDate cannot be before the attendance start date (${ATTENDANCE_START_DATE}).`,
+      });
+    }
+
+    // ── Fetch all attendance records for this user up to endDate ─────────────
+    const records = await Attendance.find({
+      user: user._id,
+      date: { $gte: ATTENDANCE_START_DATE, $lte: endDate },
+    })
+      .sort({ date: 1 })
+      .lean();
+
+    // ── Get working days for the same window ─────────────────────────────────
+    const workingDays = getWorkingDays(ATTENDANCE_START_DATE, endDate);
+
+    // ── Run the calculation ───────────────────────────────────────────────────
+    const result = calculateAttendancePercentage(records, workingDays);
+
+    const includeBreakdown = breakdown === "true";
+
+    return res.status(200).json({
+      success: true,
+      student: {
+        id: user._id,
+        name: user.name,
+        studentId: user.studentId,
+      },
+      attendanceWindow: {
+        from: ATTENDANCE_START_DATE,
+        to: endDate,
+      },
+      percentage: result.currentPercentage,
+      summary: {
+        totalWorkingDays: result.totalWorkingDays,
+        presentDays: result.presentDays,
+        absentDays: result.absentDays,
+        unmarkedDays: result.unmarkedDays,
+      },
+      rules: {
+        startingPercentage: 100,
+        absencePenalty: "-3% per absent day",
+        presenceReward: "+0.5% per present day",
+        note: "Unmarked days do not affect the percentage.",
+      },
+      ...(includeBreakdown && { breakdown: result.breakdown }),
+    });
+  } catch (error) {
+    console.error("getAttendancePercentage error:", error.message);
     return res
       .status(500)
       .json({ success: false, message: "Server error. Please try again." });
