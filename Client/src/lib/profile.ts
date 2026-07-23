@@ -24,3 +24,14 @@ export async function updateProfile(payload: UpdateProfilePayload): Promise<User
   const { data } = await api.put<ProfileResponse>('/profile/me', payload);
   return data.user;
 }
+
+/**
+ * PUT /api/profile/me/password
+ * Changes the current user's password.
+ */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  await api.put('/profile/me/password', { currentPassword, newPassword });
+}

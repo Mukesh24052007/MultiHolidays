@@ -97,3 +97,52 @@ export const updateProfile = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error." });
   }
 };
+
+/**
+ * PUT /api/profile/me/password
+ * Changes the authenticated user's password.
+ * Requires: currentPassword, newPassword (min 6 chars).
+ */
+export const changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "currentPassword and newPassword are required.",
+    });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "New password must be at least 6 characters.",
+    });
+  }
+
+  try {
+    // Re-fetch user with password field (it's select: false normally)
+    const User = (await import("../models/User.js")).default;
+    const user = await User.findById(req.user._id).select("+password");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Current password is incorrect." });
+    }
+
+    user.password = newPassword; // pre-save hook will hash it
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully.",
+    });
+  } catch (error) {
+    console.error("Change password error:", error.message);
+    return res.status(500).json({ success: false, message: "Server error." });
+  }
+};

@@ -9,12 +9,12 @@ import Footer from '@/components/layout/Footer';
 import Icon from '@/components/ui/Icon';
 import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
 import DisclaimerNote from '@/components/dashboard/DisclaimerNote';
-import AttendanceRecordList from '@/components/dashboard/AttendanceRecord';
 import ImageGrid from '@/components/dashboard/ImageGrid';
-import { RECENT_ATTENDANCE, ANNOUNCEMENTS, DASHBOARD_IMAGES } from '@/constants/dashboard';
+import { ANNOUNCEMENTS, DASHBOARD_IMAGES } from '@/constants/dashboard';
 import AttendanceSection from '@/components/dashboard/AttendanceSection';
 import AttendanceStats from '@/components/dashboard/AttendanceStats';
 import MobileAttendanceStats from '@/components/dashboard/MobileAttendanceStats';
+import RecentAttendance from '@/components/dashboard/RecentAttendance';
 
 
 
@@ -139,13 +139,13 @@ export default async function DashboardPage() {
             </div>
           </section>
 
-          <AttendanceRecordList records={RECENT_ATTENDANCE} />
+          <RecentAttendance />
         </main>
 
         <BottomNav activeHref="/dashboard" />
 
         <footer className="mt-xl px-lg py-md text-center border-t border-outline-variant bg-surface">
-          <p className="font-label-sm text-label-sm text-secondary">© 2024 MultiHolidays. All rights reserved.</p>
+          <p className="font-label-sm font-label-sm text-secondary">© 2026 MultiHolidays. All rights reserved.</p>
           <div className="flex justify-center gap-md mt-sm">
             <a href="#" className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Terms and Conditions</a>
             <a href="#" className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Meet the Creator</a>

@@ -3,23 +3,14 @@
 /**
  * AttendanceSection — single client boundary owning all shared state.
  *
- * Owns:
- *  - userId            resolved once from /auth/me
- *  - todayStatus       "loading" | "present" | "absent" | "unmarked"
- *
- * Passes down:
- *  - TodayAttendanceBanner  → reads status, calls onOpenPopup
- *  - AttendancePopup        → reads userId/status, calls onMarked(status) on success
- *
- * When the popup marks attendance it calls onMarked(), which instantly updates
- * todayStatus here — the banner re-renders immediately without any page reload
- * or polling round-trip.
+ * Uses AuthContext so the userId is resolved once across the entire page,
+ * rather than firing a separate /auth/me call here.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import AttendancePopup from './AttendancePopup';
 import TodayAttendanceBanner from './TodayAttendanceBanner';
-import { getMe } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
 import { getTodayAttendance } from '@/lib/attendance';
 import type { AttendanceStatus } from '@/lib/attendance';
 import type { AttendancePopupHandle } from './AttendancePopup';
@@ -32,25 +23,20 @@ function getTodayKey(): string {
 }
 
 export default function AttendanceSection() {
-  const popupRef                    = useRef<AttendancePopupHandle>(null);
-  const [userId, setUserId]         = useState<string | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const popupRef = useRef<AttendancePopupHandle>(null);
   const [todayStatus, setTodayStatus] = useState<TodayStatus>('loading');
 
-  // ── Resolve user + fetch today's status once on mount ──────────────────────
   useEffect(() => {
+    if (authLoading || !user) return;
     let cancelled = false;
 
     (async () => {
       try {
-        const user = await getMe();
-        if (cancelled) return;
-        setUserId(user.id);
-
         const status = await getTodayAttendance(user.id, getTodayKey());
         if (cancelled) return;
         setTodayStatus(status);
 
-        // Auto-open popup if not yet marked
         if (status === 'unmarked') {
           setTimeout(() => {
             if (!cancelled) popupRef.current?.open();
@@ -62,11 +48,10 @@ export default function AttendanceSection() {
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [user, authLoading]);
 
-  // ── Called by popup the moment attendance is saved ─────────────────────────
   const handleMarked = useCallback((status: AttendanceStatus) => {
-    setTodayStatus(status); // instant banner update — no API re-fetch needed
+    setTodayStatus(status);
   }, []);
 
   return (
@@ -77,7 +62,7 @@ export default function AttendanceSection() {
       />
       <AttendancePopup
         ref={popupRef}
-        userId={userId}
+        userId={user?.id ?? null}
         onMarked={handleMarked}
       />
     </>

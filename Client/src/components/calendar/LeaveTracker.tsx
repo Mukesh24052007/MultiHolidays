@@ -44,10 +44,11 @@ function fmt(iso: string) {
 function LeaveDetailDrawer({
   leaveId, userId, onClose, onCancelled,
 }: { leaveId: string; userId: string; onClose: () => void; onCancelled: () => void }) {
-  const [data, setData]         = useState<LeaveRequestDetail | null>(null);
-  const [loading, setLoading]   = useState(true);
+  const [data, setData]             = useState<LeaveRequestDetail | null>(null);
+  const [loading, setLoading]       = useState(true);
   const [cancelling, setCancelling] = useState(false);
-  const [error, setError]       = useState<string | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [error, setError]           = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,13 +63,13 @@ function LeaveDetailDrawer({
   }, [leaveId]);
 
   async function handleCancel() {
-    if (!confirm('Cancel this leave request?')) return;
     setCancelling(true);
     try {
       await cancelLeaveRequest(leaveId);
       onCancelled();
     } catch {
       setError('Could not cancel. Try again.');
+      setConfirmCancel(false);
     } finally {
       setCancelling(false);
     }
@@ -179,12 +180,37 @@ function LeaveDetailDrawer({
         {/* Footer */}
         {data && data.status !== 'cancelled' && data.status !== 'recovered' && (
           <div className="px-5 pb-5 pt-3 border-t border-gray-100 shrink-0">
-            <button onClick={handleCancel} disabled={cancelling}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-              {cancelling
-                ? <><Icon name="progress_activity" className="animate-spin text-[15px]" />Cancelling…</>
-                : <><Icon name="cancel" className="text-[15px]" />Cancel Leave</>}
-            </button>
+            {confirmCancel ? (
+              <div className="space-y-2">
+                <p className="text-sm text-center text-gray-700 font-medium">Cancel this leave request?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmCancel(false)}
+                    disabled={cancelling}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    Keep it
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    disabled={cancelling}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {cancelling
+                      ? <><Icon name="progress_activity" className="animate-spin text-[15px]" />Cancelling…</>
+                      : 'Yes, cancel'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmCancel(true)}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon name="cancel" className="text-[15px]" />
+                Cancel Leave
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -7,23 +7,34 @@ import LoginBranding from '@/components/login/LoginBranding';
 import LoginForm from '@/components/login/LoginForm';
 import LoginSidePanel from '@/components/login/LoginSidePanel';
 import TrustBadges from '@/components/login/TrustBadges';
-import { getMe } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
 
+  // Once auth resolves, redirect already-logged-in users to dashboard
   useEffect(() => {
-    // If a valid session cookie already exists, skip the login page entirely.
-    getMe()
-      .then(() => router.replace('/dashboard'))
-      .catch(() => {
-        // No valid session — stay on the login page.
-      });
-  }, [router]);
+    if (!loading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  // Show nothing while the session check is in-flight to avoid flash
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center bg-background">
+        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+      </div>
+    );
+  }
+
+  // If user is already set, we're about to redirect — don't render the form
+  if (user) return null;
 
   return (
     <div className="w-full min-h-screen">
-      {/* ── Mobile ── */}
+      {/* ── Mobile ────────────────────────────────────────────────────────── */}
       <div className="block md:hidden">
         <main className="mobile-container flex flex-col justify-center items-center px-sm py-xl max-w-[448px] mx-auto relative overflow-hidden">
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -37,9 +48,9 @@ export default function LoginPage() {
             <LoginForm />
             <div className="mt-xl pt-md border-t border-outline-variant text-center">
               <p className="font-body-md text-body-md text-on-surface-variant mb-sm">New to the system?</p>
-              <button className="w-full py-3 px-lg border border-primary text-primary font-label-md text-label-md rounded-lg hover:bg-primary/5 active:scale-[0.98] transition-all">
-                Apply for Access
-              </button>
+              <p className="font-label-sm text-label-sm text-outline">
+                Contact your college administrator to get access.
+              </p>
             </div>
           </section>
 
@@ -49,17 +60,17 @@ export default function LoginPage() {
               <span className="w-1 h-1 bg-outline rounded-full" />
               <a href="#" className="font-label-sm text-label-sm text-on-secondary-fixed-variant hover:text-on-surface transition-colors">Privacy Policy</a>
             </div>
-            <p className="font-label-sm text-label-sm text-outline">© 2024 MultiHolidays. All rights reserved.</p>
+            <p className="font-label-sm text-label-sm text-outline">© 2026 MultiHolidays. All rights reserved.</p>
           </footer>
         </main>
       </div>
 
-      {/* ── Desktop ── */}
+      {/* ── Desktop ───────────────────────────────────────────────────────── */}
       <div className="hidden md:flex min-h-screen items-center justify-center p-md">
         {/* Decorative blobs */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <div className="floating-blob bg-primary w-[500px] h-[500px] -top-24 -left-24 animate-pulse" />
-          <div className="floating-blob bg-tertiary w-[400px] h-[400px] bottom-0 right-0 animate-bounce" style={{ animationDuration: '10s' }} />
+          <div className="floating-blob bg-tertiary w-[400px] h-[400px] bottom-0 right-0" style={{ animationDuration: '10s' }} />
         </div>
 
         <main className="w-full max-w-[440px] z-10">
@@ -76,17 +87,17 @@ export default function LoginPage() {
           <section className="login-card bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
             <LoginForm showRemember />
             <div className="mt-lg pt-lg border-t border-outline-variant text-center">
-              <p className="font-body-md text-body-md text-on-surface-variant mb-md">New to MultiHolidays?</p>
-              <button className="w-full border border-primary text-primary py-2.5 rounded-lg font-label-md text-label-md hover:bg-primary/5 active:bg-primary/10 transition-all">
-                Apply for Access
-              </button>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-sm">New to MultiHolidays?</p>
+              <p className="font-label-sm text-label-sm text-outline">
+                Contact your college administrator to request access.
+              </p>
             </div>
           </section>
 
           <TrustBadges />
 
           <footer className="mt-xl text-center">
-            <p className="font-label-sm text-label-sm text-outline">© 2024 MultiHolidays. All rights reserved.</p>
+            <p className="font-label-sm text-label-sm text-outline">© 2026 MultiHolidays. All rights reserved.</p>
           </footer>
         </main>
 

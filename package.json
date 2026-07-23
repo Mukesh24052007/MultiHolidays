@@ -4,10 +4,11 @@
   "main": "server/server.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon server/server.js",
-    "dev-build": "npm install && npm install --prefix client",
-    "start": "node server/server.js",
-    "build": "npm install && npm install --prefix client && npm run build --prefix client"
+    "dev": "concurrently --names \"API,WEB\" --prefix-colors \"blue,green\" \"nodemon Server/server.js\" \"npm run dev --prefix Client\"",
+    "start": "node Server/server.js",
+    "start:all": "concurrently --names \"API,WEB\" --prefix-colors \"blue,green\" \"node Server/server.js\" \"npm run start --prefix Client\"",
+    "build": "npm install && npm install --prefix Client && npm run build --prefix Client",
+    "install:all": "npm install && npm install --prefix Client"
   },
   "repository": {
     "type": "git",
@@ -28,10 +29,13 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.4"
   },
   "devDependencies": {
+    "concurrently": "^10.0.3",
     "nodemon": "^3.1.14"
   }
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
+import LogoutButton from '@/components/layout/LogoutButton';
 
 type MobileHeaderProps = {
   /** Optional avatar URL. Falls back to initials when omitted. */
@@ -20,17 +21,12 @@ export default function MobileHeader({ userAvatar, userName }: MobileHeaderProps
   const initials = getInitials(userName);
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 z-50 bg-surface/80 backdrop-blur-md flex justify-between items-center px-sm">
+    <header className="fixed top-0 left-0 right-0 h-16 z-50 bg-surface/80 backdrop-blur-md flex justify-between items-center px-sm border-b border-outline-variant/50">
       <span className="text-headline-md font-headline-md font-bold text-primary">MultiHolidays</span>
 
       <div className="flex items-center gap-xs">
-        {/* Notification bell */}
-        <button
-          className="hover:bg-surface-container-low rounded-full p-2 transition-opacity active:opacity-80"
-          aria-label="Notifications"
-        >
-          <Icon name="notifications" className="text-primary" />
-        </button>
+        {/* Logout icon button */}
+        <LogoutButton variant="icon" />
 
         {/* Avatar — links to profile */}
         <Link
