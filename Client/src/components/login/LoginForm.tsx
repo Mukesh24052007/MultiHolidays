@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import { loginUser } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
 
 type LoginFormProps = {
   showRemember?: boolean;
@@ -11,6 +12,7 @@ type LoginFormProps = {
 
 export default function LoginForm({ showRemember = false }: LoginFormProps) {
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +28,8 @@ export default function LoginForm({ showRemember = false }: LoginFormProps) {
 
     try {
       await loginUser(email, password);
+      // Sync the auth context so the cookie is confirmed readable before navigating
+      await refreshUser();
       router.push('/dashboard');
     } catch (err: unknown) {
       const message =
