@@ -33,6 +33,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        value: https://multiholidays-api.onrender.com/api
+        value: /api
       - key: NEXT_PRIVATE_API_URL
         value: https://multiholidays-api.onrender.com/api
