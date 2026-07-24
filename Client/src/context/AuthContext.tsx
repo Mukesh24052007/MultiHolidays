@@ -61,8 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // ignore — clear state regardless
     }
     setUser(null);
-    router.push('/');
-  }, [router]);
+    window.location.assign('/');
+  }, []);
 
   const refreshUser = useCallback(async () => {
     await fetchUser();

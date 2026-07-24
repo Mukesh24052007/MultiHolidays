@@ -16,9 +16,9 @@ export default function LoginPage() {
   // Once auth resolves, redirect already-logged-in users to dashboard
   useEffect(() => {
     if (!loading && user) {
-      router.replace('/dashboard');
+      window.location.assign('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, loading]);
 
   // Show nothing while the session check is in-flight to avoid flash
   if (loading) {
