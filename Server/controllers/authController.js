@@ -6,12 +6,10 @@ const extractName = (email) => email.split("@")[0].split(".")[0];
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  // "lax" allows the cookie to be sent on cross-origin requests initiated
-  // by the browser (e.g. Next.js on :3000 calling the API on :2026).
-  // "strict" blocks all cross-origin cookie sending, which breaks the
-  // client-side getMe() call used to redirect authenticated users away
-  // from the login page.
-  sameSite: "lax",
+  // "none" is required for cross-origin cookie sending in production
+  // (frontend and API on different Render domains).
+  // "lax" is fine for local dev where both run on localhost.
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
 };
 
