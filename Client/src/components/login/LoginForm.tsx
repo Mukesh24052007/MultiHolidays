@@ -28,9 +28,8 @@ export default function LoginForm({ showRemember = false }: LoginFormProps) {
 
     try {
       await loginUser(email, password);
-      // Sync the auth context so the cookie is confirmed readable before navigating
       await refreshUser();
-      router.push('/dashboard');
+      window.location.assign('/dashboard');
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
